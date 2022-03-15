@@ -38,10 +38,97 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cEnergy
+double cEnergy(arma::rowvec state, arma::rowvec alpha, arma::mat beta);
+RcppExport SEXP _rELA_cEnergy(SEXP stateSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::rowvec >::type state(stateSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(cEnergy(state, alpha, beta));
+    return rcpp_result_gen;
+END_RCPP
+}
+// SteepestDescent_cpp
+arma::mat SteepestDescent_cpp(arma::rowvec state, arma::rowvec alpha, arma::mat beta);
+RcppExport SEXP _rELA_SteepestDescent_cpp(SEXP stateSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::rowvec >::type state(stateSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(SteepestDescent_cpp(state, alpha, beta));
+    return rcpp_result_gen;
+END_RCPP
+}
+// SSestimate
+arma::mat SSestimate(arma::rowvec alpha, arma::mat beta, int itr);
+RcppExport SEXP _rELA_SSestimate(SEXP alphaSEXP, SEXP betaSEXP, SEXP itrSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::rowvec >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< int >::type itr(itrSEXP);
+    rcpp_result_gen = Rcpp::wrap(SSestimate(alpha, beta, itr));
+    return rcpp_result_gen;
+END_RCPP
+}
+// FindingTippingpoint_cpp
+arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1, arma:: rowvec s2, arma::rowvec alpha, arma::mat jj, int tmax);
+RcppExport SEXP _rELA_FindingTippingpoint_cpp(SEXP s1SEXP, SEXP s2SEXP, SEXP alphaSEXP, SEXP jjSEXP, SEXP tmaxSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::rowvec >::type s1(s1SEXP);
+    Rcpp::traits::input_parameter< arma:: rowvec >::type s2(s2SEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type jj(jjSEXP);
+    Rcpp::traits::input_parameter< int >::type tmax(tmaxSEXP);
+    rcpp_result_gen = Rcpp::wrap(FindingTippingpoint_cpp(s1, s2, alpha, jj, tmax));
+    return rcpp_result_gen;
+END_RCPP
+}
+// entropy
+double entropy(arma::vec v);
+RcppExport SEXP _rELA_entropy(SEXP vSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type v(vSEXP);
+    rcpp_result_gen = Rcpp::wrap(entropy(v));
+    return rcpp_result_gen;
+END_RCPP
+}
+// SSentropy
+arma::mat SSentropy(arma::mat uoc, arma::mat ss, arma::rowvec alpha, arma::mat beta, int seitr, int convTime);
+RcppExport SEXP _rELA_SSentropy(SEXP uocSEXP, SEXP ssSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP seitrSEXP, SEXP convTimeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type uoc(uocSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type ss(ssSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< int >::type seitr(seitrSEXP);
+    Rcpp::traits::input_parameter< int >::type convTime(convTimeSEXP);
+    rcpp_result_gen = Rcpp::wrap(SSentropy(uoc, ss, alpha, beta, seitr, convTime));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rELA_SA_simple", (DL_FUNC) &_rELA_SA_simple, 3},
     {"_rELA_SA", (DL_FUNC) &_rELA_SA, 4},
+    {"_rELA_cEnergy", (DL_FUNC) &_rELA_cEnergy, 3},
+    {"_rELA_SteepestDescent_cpp", (DL_FUNC) &_rELA_SteepestDescent_cpp, 3},
+    {"_rELA_SSestimate", (DL_FUNC) &_rELA_SSestimate, 3},
+    {"_rELA_FindingTippingpoint_cpp", (DL_FUNC) &_rELA_FindingTippingpoint_cpp, 5},
+    {"_rELA_entropy", (DL_FUNC) &_rELA_entropy, 1},
+    {"_rELA_SSentropy", (DL_FUNC) &_rELA_SSentropy, 6},
     {NULL, NULL, 0}
 };
 
