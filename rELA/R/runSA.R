@@ -54,3 +54,52 @@ runSA <- function(data=NULL, env=NULL,
     
     return(fit)
 }
+
+runSAparallel <- function(data=NULL, env=NULL,
+                  		  rep=16, max.itr=10000){
+    require(doParallel)
+    if(is.null(env)){
+    	
+    	## ============================================== ##
+        ## -- without explicit variables
+        
+        cat('Start parameter fitting\n')	
+        s <- proc.time()[3]			
+        fittingMat <- foreach(i = 1:rep) %dopar% {
+            
+            cat(sprintf('Fitting %s...', i))	
+            SAres <- SA_simple(ocData = data, maxInt = max.itr)
+            return(SAres)
+        }
+        
+        cat(sprintf('Done ; elapsed time %.2f sec', proc.time()[3]-s))	
+        ## ============================================== ##
+
+    }else{
+        
+        ## ============================================== ##
+        ## -- with explicit variables
+				
+        cat('Start parameter fitting\n')	
+        s <- proc.time()[3]			
+        fittingMat <- foreach(i = 1:rep) %dopar% {
+            
+            cat(sprintf('Fitting %s...', i))	
+            SAres <- SA(ocData = data, envData=as.matrix(env), maxInt = max.itr)
+            fittingMat <- fittingMat + SAres
+        }
+      
+        cat(sprintf('Done ; elapsed time %.2f sec', proc.time()[3]-s))	
+        ## ============================================== ##
+        
+    }
+    fittingRes <- matrix(0, ncol=ncol(data)+1, nrow=ncol(data),
+        					dimnames=list(colnames(data), c('h', paste('J',colnames(data),sep='.')) ))
+    
+    for(i in 1:rep){
+    	
+    	fittingRes <- fittingRes + fittingMat[[i]]
+    }     					
+    return(fittingRes/rep)
+}
+

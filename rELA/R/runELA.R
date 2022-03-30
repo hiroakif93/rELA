@@ -12,7 +12,7 @@
 ELA <- function(alpha=alpha, J=jj, 
                 SS.itr=20000,
                 FindingTip.itr=10000){ 
-    
+    start <- proc.time()[3]
     ## ================================ ##
     ## -- Stable state
     minsets=SSestimate(alpha, J, itr=SS.itr)
@@ -45,7 +45,8 @@ ELA <- function(alpha=alpha, J=jj,
     
     rbind(data.frame('State'='stable', stablestate), data.frame('State'='tip', tippointSummary))
     ## ================================ ##
-    
+    end <- proc.time()[3]
+    cat(sprintf('Elapsed time %.2f sec\n', end-start))
 }
 
 
@@ -62,10 +63,12 @@ ELA <- function(alpha=alpha, J=jj,
 #' 
 calcStability <- function(data=NULL, alpha, J,
 						  seitr=1000, convTime=10000){
-    
+						  	
+    start <- proc.time()[3]
+    ## ================================ ##
     sampleSS <- t(apply(data, 1, SteepestDescent_cpp, alpha=alpha, beta=J))
     ssid <- apply(sampleSS[,-ncol(sampleSS)], 1, 
-                  function(x){ strtoi( paste0(x, collapse=''), base=2) })
+                  function(x){ paste0(x, collapse='') })
     ssenergy <- sampleSS[, ncol(sampleSS)]
     energy <- apply(ocdata, 1, cEnergy, alpha= alpha, beta=J)
     
@@ -76,4 +79,8 @@ calcStability <- function(data=NULL, alpha, J,
           	  
     return( data.frame(StableState.id=ssid, SSenergy=ssenergy,
                        energy.gap=energy.gap, SSentropy= ssent[,1]))
+                       
+    ## ================================ ##
+    end <- proc.time()[3]
+    cat(sprintf('Elapsed time %.2f sec\n', end-start))                   
 }

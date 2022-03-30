@@ -2,34 +2,34 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 SA_simple <- function(ocData, maxInt = 50000, momentum = 0.3) {
-    .Call('_rELA_SA_simple', PACKAGE = 'rELA', ocData, maxInt, momentum)
+    .Call(`_rELA_SA_simple`, ocData, maxInt, momentum)
 }
 
 SA <- function(ocData, envData, maxInt = 50000, momentum = 0.3) {
-    .Call('_rELA_SA', PACKAGE = 'rELA', ocData, envData, maxInt, momentum)
+    .Call(`_rELA_SA`, ocData, envData, maxInt, momentum)
 }
 
 cEnergy <- function(state, alpha, beta) {
-    .Call('_rELA_cEnergy', PACKAGE = 'rELA', state, alpha, beta)
+    .Call(`_rELA_cEnergy`, state, alpha, beta)
 }
 
 SteepestDescent_cpp <- function(state, alpha, beta) {
-    .Call('_rELA_SteepestDescent_cpp', PACKAGE = 'rELA', state, alpha, beta)
+    .Call(`_rELA_SteepestDescent_cpp`, state, alpha, beta)
 }
 
 SSestimate <- function(alpha, beta, itr = 20000L) {
-    .Call('_rELA_SSestimate', PACKAGE = 'rELA', alpha, beta, itr)
+    .Call(`_rELA_SSestimate`, alpha, beta, itr)
 }
 
 FindingTippingpoint_cpp <- function(s1, s2, alpha, jj, tmax = 10000L) {
-    .Call('_rELA_FindingTippingpoint_cpp', PACKAGE = 'rELA', s1, s2, alpha, jj, tmax)
+    .Call(`_rELA_FindingTippingpoint_cpp`, s1, s2, alpha, jj, tmax)
 }
 
 entropy <- function(v) {
-    .Call('_rELA_entropy', PACKAGE = 'rELA', v)
+    .Call(`_rELA_entropy`, v)
 }
 
 SSentropy <- function(uoc, ss, alpha, beta, seitr = 1000L, convTime = 10000L) {
-    .Call('_rELA_SSentropy', PACKAGE = 'rELA', uoc, ss, alpha, beta, seitr, convTime)
+    .Call(`_rELA_SSentropy`, uoc, ss, alpha, beta, seitr, convTime)
 }
 

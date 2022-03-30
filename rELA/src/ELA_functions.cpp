@@ -412,7 +412,20 @@ int convDec(arma::rowvec v)
   
 }
 
-// Entropy
+// Convert to string
+std::string convStr(arma::rowvec v)  {
+  int tmp;
+  std::string str;
+  for(int i=0; i< v.n_elem; i++){
+    tmp=v(i);
+    str+=std::to_string(tmp);
+  }
+  
+  return str; 
+  
+}
+
+// Entropy numeric
 // [[Rcpp::export]]
 double entropy(arma::vec v)
 {
@@ -430,6 +443,22 @@ double entropy(arma::vec v)
   return ent*(-1);
 }
 
+// Entropy string
+double entropy2(Rcpp::StringVector v)
+{
+  IntegerVector tab=table(v);
+  double total=v.length();
+  NumericVector numtab=as<NumericVector>(tab);
+  
+  double ent=0;
+  for(int i=0; i<tab.size(); i++){
+    double prob=tab[i]/total;
+    ent+=prob*log(prob);
+  }
+  
+  return ent*(-1);
+}
+
 // [[Rcpp::export]]
 arma::mat SSentropy(arma::mat uoc, arma::mat ss,
                     arma::rowvec alpha, arma::mat beta, 
@@ -441,7 +470,8 @@ arma::mat SSentropy(arma::mat uoc, arma::mat ss,
     mat logmat;
     rowvec ysim=uoc.row(i);
     int tt=0;
-    mat simures=zeros(seitr, 3);
+    Rcpp::StringVector ssid(seitr);
+    mat stable=zeros(seitr, 2);
     
     for(int l=0; l < seitr; l++){
       
@@ -455,15 +485,15 @@ arma::mat SSentropy(arma::mat uoc, arma::mat ss,
         }
       } while ( tt<convTime );
       
-      simures(l, 0)=convDec(ysim);
-      simures(l, 1)=tt;
-      simures(l, 2)=((tt+1)==convTime);
+      ssid(l)=convStr(ysim);
+      stable(l, 0)=tt;
+      stable(l, 1)=((tt+1)==convTime);
       
     }
     
-    entropyres(i,0)=entropy(simures.col(0));
-    entropyres(i,1)=mean(simures.col(1));
-    entropyres(i,2)=sum(simures.col(2));
+    entropyres(i,0)=entropy2(ssid);
+    entropyres(i,1)=mean(stable.col(0));
+    entropyres(i,2)=sum(stable.col(1));
   }
 
   return entropyres;
