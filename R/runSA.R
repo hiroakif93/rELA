@@ -8,7 +8,7 @@
 #'
 #' @useDynLib rELA, .registration=TRUE
 #' @importFrom Rcpp sourceCpp
-#' 
+#' @export
 runSA <- function(data=NULL, env=NULL,
                   rep=16, max.itr=10000){
     
@@ -55,6 +55,7 @@ runSA <- function(data=NULL, env=NULL,
     return(fit)
 }
 
+#' @export
 runSAparallel <- function(data=NULL, env=NULL,
                   		  rep=16, max.itr=10000){
     require(doParallel)
