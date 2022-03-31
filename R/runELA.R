@@ -8,7 +8,7 @@
 #'
 #' @useDynLib rELA, .registration=TRUE
 #' @importFrom Rcpp sourceCpp
-#' 
+#' @export
 ELA <- function(alpha=alpha, J=jj, 
                 SS.itr=20000,
                 FindingTip.itr=10000){ 
@@ -60,7 +60,7 @@ ELA <- function(alpha=alpha, J=jj,
 #'
 #' @useDynLib rELA, .registration=TRUE
 #' @importFrom Rcpp sourceCpp
-#' 
+#' @export
 calcStability <- function(data=NULL, alpha, J,
 						  seitr=1000, convTime=10000){
 						  	

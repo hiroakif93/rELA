@@ -55,10 +55,14 @@ runSA <- function(data=NULL, env=NULL,
     return(fit)
 }
 
+#'Parallel stochastic Approximation
+#' @importFrom Rcpp sourceCpp
+#' @importFrom foreach foreach
 #' @export
+#'@export
 runSAparallel <- function(data=NULL, env=NULL,
                   		  rep=16, max.itr=10000){
-    require(doParallel)
+
     if(is.null(env)){
     	
     	## ============================================== ##
