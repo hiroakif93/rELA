@@ -28,7 +28,7 @@ runSA <- function(data=NULL, env=NULL,
             fittingMat <- fittingMat + SAres
         }
         fit <- fittingMat/rep
-        cat(sprintf('Done ; elapsed time %.2f sec', proc.time()[3]-s))	
+        cat(sprintf('Done ; elapsed time %.2f sec\n\n', proc.time()[3]-s))	
         ## ============================================== ##
 
     }else{
@@ -47,7 +47,7 @@ runSA <- function(data=NULL, env=NULL,
             fittingMat <- fittingMat + SAres
         }
         fit <- fittingMat/rep
-        cat(sprintf('Done ; elapsed time %.2f sec', proc.time()[3]-s))	
+        cat(sprintf('Done ; elapsed time %.2f sec\n\n', proc.time()[3]-s))	
         ## ============================================== ##
         
     }
@@ -72,12 +72,11 @@ runSAparallel <- function(data=NULL, env=NULL,
         s <- proc.time()[3]			
         fittingMat <- foreach(i = 1:rep) %dopar% {
             
-            cat(sprintf('Fitting %s...', i))	
             SAres <- SA_simple(ocData = data, maxInt = max.itr)
             return(SAres)
         }
         
-        cat(sprintf('Done ; elapsed time %.2f sec', proc.time()[3]-s))	
+        cat(sprintf('Done ; elapsed time %.2f sec\n\n', proc.time()[3]-s))	
         ## ============================================== ##
 
     }else{
@@ -89,12 +88,11 @@ runSAparallel <- function(data=NULL, env=NULL,
         s <- proc.time()[3]			
         fittingMat <- foreach(i = 1:rep) %dopar% {
             
-            cat(sprintf('Fitting %s...', i))	
             SAres <- SA(ocData = data, envData=as.matrix(env), maxInt = max.itr)
-            fittingMat <- fittingMat + SAres
+            return(SAres)
         }
       
-        cat(sprintf('Done ; elapsed time %.2f sec', proc.time()[3]-s))	
+        cat(sprintf('Done ; elapsed time %.2f sec\n\n', proc.time()[3]-s))	
         ## ============================================== ##
         
     }

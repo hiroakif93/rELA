@@ -82,5 +82,5 @@ calcStability <- function(data=NULL, alpha, J,
                        
     ## ================================ ##
     end <- proc.time()[3]
-    cat(sprintf('Elapsed time %.2f sec\n', end-start))                   
+    cat(sprintf('Stability calculation done.\nElapsed time %.2f sec\n\n', end-start))                   
 }
