@@ -96,7 +96,7 @@ runSAparallel <- function(data=NULL, env=NULL,
         ## ============================================== ##
         
     }
-    fittingMat <- matrix(0, ncol=ncol(data)+2, nrow=ncol(data),
+    fittingRes <- matrix(0, ncol=ncol(data)+2, nrow=ncol(data),
         					dimnames=list(colnames(data), c('h', 'g', paste('J',colnames(data),sep='.')) ))
         					
     for(i in 1:rep){
