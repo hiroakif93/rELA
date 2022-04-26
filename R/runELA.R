@@ -49,10 +49,28 @@ ELA <- function(alpha=alpha, J=jj,
     cat(sprintf('Elapsed time %.2f sec\n', end-start))
 }
 
-#'Calculation stability indices.
+#'SteepestDescent
 #' @export
-SteepestDescent <- function(comm, alpha, beta){
-	res <- SteepestDescent_cpp(comm, alpha, beta)
+SteepestDescent <- function(state, alpha, beta){
+	res <- SteepestDescent_cpp(state, alpha, beta)
+	return(res)
+}
+
+#'cEnergy
+#' @export
+Energy <- function(state, alpha, beta){
+	res <- cEnergy(state, alpha, beta)
+	return(res)
+}
+
+#'cEnergy
+#' @export
+SSentropy <- function(state, ss,
+          				alpha, beta, 
+          				seitr=1000, convTime=10000){
+	res <- SSentropy(uoc= state, ss= ss,
+          				alpha= alpha, beta=beta, 
+          				seitr=seitr, convTime=convTime)
 	return(res)
 }
 

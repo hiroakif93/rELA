@@ -2,10 +2,10 @@
 % Please edit documentation in R/runELA.R
 \name{SteepestDescent}
 \alias{SteepestDescent}
-\title{Calculation stability indices.}
+\title{SteepestDescent}
 \usage{
-SteepestDescent(comm, alpha, beta)
+SteepestDescent(state, alpha, beta)
 }
 \description{
-Calculation stability indices.
+SteepestDescent
 }
