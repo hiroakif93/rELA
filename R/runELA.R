@@ -49,6 +49,12 @@ ELA <- function(alpha=alpha, J=jj,
     cat(sprintf('Elapsed time %.2f sec\n', end-start))
 }
 
+#'Calculation stability indices.
+#' @export
+SteepestDescent <- function(comm, alpha, beta){
+	res <- SteepestDescent_cpp(comm, alpha, beta)
+	return(res)
+}
 
 #'Calculation stability indices.
 #'@description Claculating stable state energy, difference between sample's energy and stable state energy and stable state entropy.
