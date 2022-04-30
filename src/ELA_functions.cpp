@@ -460,7 +460,7 @@ double entropy2(Rcpp::StringVector v)
 }
 
 // [[Rcpp::export]]
-arma::mat SSentropy(arma::mat uoc, arma::mat ss,
+arma::mat SSentropy_cpp(arma::mat uoc, arma::mat ss,
                     arma::rowvec alpha, arma::mat beta, 
                     int seitr=1000, int convTime=10000){
   
