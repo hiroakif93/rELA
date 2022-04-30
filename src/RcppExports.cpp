@@ -103,9 +103,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// SSentropy
-arma::mat SSentropy(arma::mat uoc, arma::mat ss, arma::rowvec alpha, arma::mat beta, int seitr, int convTime);
-RcppExport SEXP _rELA_SSentropy(SEXP uocSEXP, SEXP ssSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP seitrSEXP, SEXP convTimeSEXP) {
+// SSentropy_cpp
+arma::mat SSentropy_cpp(arma::mat uoc, arma::mat ss, arma::rowvec alpha, arma::mat beta, int seitr, int convTime);
+RcppExport SEXP _rELA_SSentropy_cpp(SEXP uocSEXP, SEXP ssSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP seitrSEXP, SEXP convTimeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -115,7 +115,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< int >::type seitr(seitrSEXP);
     Rcpp::traits::input_parameter< int >::type convTime(convTimeSEXP);
-    rcpp_result_gen = Rcpp::wrap(SSentropy(uoc, ss, alpha, beta, seitr, convTime));
+    rcpp_result_gen = Rcpp::wrap(SSentropy_cpp(uoc, ss, alpha, beta, seitr, convTime));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -128,7 +128,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rELA_SSestimate", (DL_FUNC) &_rELA_SSestimate, 3},
     {"_rELA_FindingTippingpoint_cpp", (DL_FUNC) &_rELA_FindingTippingpoint_cpp, 5},
     {"_rELA_entropy", (DL_FUNC) &_rELA_entropy, 1},
-    {"_rELA_SSentropy", (DL_FUNC) &_rELA_SSentropy, 6},
+    {"_rELA_SSentropy_cpp", (DL_FUNC) &_rELA_SSentropy_cpp, 6},
     {NULL, NULL, 0}
 };
 

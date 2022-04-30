@@ -29,7 +29,7 @@ entropy <- function(v) {
     .Call(`_rELA_entropy`, v)
 }
 
-SSentropy <- function(uoc, ss, alpha, beta, seitr = 1000L, convTime = 10000L) {
-    .Call(`_rELA_SSentropy`, uoc, ss, alpha, beta, seitr, convTime)
+SSentropy_cpp <- function(uoc, ss, alpha, beta, seitr = 1000L, convTime = 10000L) {
+    .Call(`_rELA_SSentropy_cpp`, uoc, ss, alpha, beta, seitr, convTime)
 }
 

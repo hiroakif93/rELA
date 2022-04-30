@@ -97,7 +97,7 @@ calcStability <- function(data=NULL, alpha, J,
     energy <- apply(ocdata, 1, cEnergy, alpha= alpha, beta=J)
     
     energy.gap <- energy-ssenergy
-    ssent <- SSentropy(uoc=ocdata, ss=unique(sampleSS[,-ncol(sampleSS)]),
+    ssent <- SSentropy_cpp(uoc=ocdata, ss=unique(sampleSS[,-ncol(sampleSS)]),
           				alpha= alpha, beta=J, 
           				seitr=seitr, convTime=convTime)
           	  
