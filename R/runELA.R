@@ -68,7 +68,7 @@ Energy <- function(state, alpha, beta){
 SSentropy <- function(state, ss,
           				alpha, beta, 
           				seitr=1000, convTime=10000){
-	res <- SSentropy(uoc= state, ss= ss,
+	res <- SSentropy_cpp(uoc= state, ss= ss,
           				alpha= alpha, beta=beta, 
           				seitr=seitr, convTime=convTime)
 	return(res)
