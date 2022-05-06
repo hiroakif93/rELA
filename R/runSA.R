@@ -58,11 +58,16 @@ runSA <- function(data=NULL, env=NULL,
 #'Parallel stochastic Approximation
 #' @importFrom Rcpp sourceCpp
 #' @importFrom foreach foreach
+#' @importFrom parallel makeCluster
+#' @importFrom doSNOW registerDoSNOW
 #' @export
-#'@export
-runSAparallel <- function(data=NULL, env=NULL,
-                  		  rep=16, max.itr=10000){
-
+runSAparallel <- function(data=NULL, env=NULL, 
+                   	  rep=16, max.itr=10000,
+			  thread=1){
+	
+     cl <- makeCluster(thread, outfile="")
+     registerDoSNOW(cl)
+	
     if(is.null(env)){
     	
     	## ============================================== ##
@@ -72,11 +77,12 @@ runSAparallel <- function(data=NULL, env=NULL,
         s <- proc.time()[3]			
         fittingMat <- foreach(i = 1:rep) %dopar% {
             
+	    cat( sprintf('Trial %s...',i) )
             SAres <- SA_simple(ocData = data, maxInt = max.itr)
             return(SAres)
         }
         
-        cat(sprintf('Done ; elapsed time %.2f sec\n\n', proc.time()[3]-s))	
+        cat(sprintf('\nDone ; elapsed time %.2f sec\n\n', proc.time()[3]-s))	
         ## ============================================== ##
 
     }else{
@@ -87,12 +93,13 @@ runSAparallel <- function(data=NULL, env=NULL,
         cat('Start parameter fitting\n')	
         s <- proc.time()[3]			
         fittingMat <- foreach(i = 1:rep) %dopar% {
-            
+		
+            cat( sprintf('Trial %s...',i) )
             SAres <- SA(ocData = data, envData=as.matrix(env), maxInt = max.itr)
             return(SAres)
         }
       
-        cat(sprintf('Done ; elapsed time %.2f sec\n\n', proc.time()[3]-s))	
+        cat(sprintf('\nDone ; elapsed time %.2f sec\n\n', proc.time()[3]-s))	
         ## ============================================== ##
         
     }
