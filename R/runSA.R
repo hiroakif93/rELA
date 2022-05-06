@@ -35,8 +35,9 @@ runSA <- function(data=NULL, env=NULL,
         
         ## ============================================== ##
         ## -- with explicit variables
-        fittingMat <- matrix(0, ncol=ncol(data)+1+ncol(env), nrow=ncol(data),
-        					dimnames=list(colnames(data), c('h', 'g', paste('J',colnames(data),sep='.')) ))
+        fittingMat <- matrix(0, ncol=ncol(data)+2+(ncol(env)-1), nrow=ncol(data),
+        		     dimnames=list(colnames(data), c('h', paste('g',1:(1+(ncol(env)-1)), sep='.'), 
+								paste('J',colnames(data),sep='.')) ))
         					
         cat('Start parameter fitting\n')	
         s <- proc.time()[3]			
@@ -66,7 +67,7 @@ runSAparallel <- function(data=NULL, env=NULL,
 			  thread=1){
 	
      cl <- makeCluster(thread, outfile="")
-     registerDoSNOW(cl)
+     doSNOW::registerDoSNOW(cl)
 	
     if(is.null(env)){
     	
@@ -103,9 +104,9 @@ runSAparallel <- function(data=NULL, env=NULL,
         ## ============================================== ##
         
     }
-    fittingRes <- matrix(0, ncol=ncol(data)+1+(ncol(env)-1), nrow=ncol(data),
-        					dimnames=list(colnames(data), c('h', rep('g',1+(ncol(env)-1)), 
-										paste('J',colnames(data),sep='.')) ))
+    fittingRes <- matrix(0, ncol=ncol(data)+2+(ncol(env)-1), nrow=ncol(data),
+        		 dimnames=list(colnames(data), paste('g',1:(1+(ncol(env)-1)), sep='.'), 
+							    paste('J',colnames(data),sep='.')) ))
         					
     for(i in 1:rep){
     	
