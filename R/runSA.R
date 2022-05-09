@@ -60,14 +60,14 @@ runSA <- function(data=NULL, env=NULL,
 #' @importFrom Rcpp sourceCpp
 #' @importFrom foreach foreach
 #' @importFrom parallel makeCluster
-#' @importFrom doSNOW registerDoSNOW
+#' @importFrom doParallel registerDoParallel
 #' @export
 runSAparallel <- function(data=NULL, env=NULL, 
                    	  rep=16, max.itr=10000,
 			  thread=1){
 	
-     cl <- makeCluster(thread, outfile="")
-     doSNOW::registerDoSNOW(cl)
+    cluster = makeCluster(thread, "FORK")
+    registerDoParallel(cluster)
 	
     if(is.null(env)){
     	
