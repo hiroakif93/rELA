@@ -102,9 +102,15 @@ runSAparallel <- function(data=NULL, env=NULL,
       
         cat(sprintf('\nDone ; elapsed time %.2f sec\n\n', proc.time()[3]-s))	
         ## ============================================== ##
+	if( !is.null(env) ){ 
+	    gname <- paste('g', colnames(env), '.') 
+	}else{
+	    gname <- paste('g',1:(1+(ncol(env)-1)), sep='.')	
+	}
+	    
         fittingRes <- matrix(0, ncol=ncol(data)+2+(ncol(env)-1), nrow=ncol(data),
-        		     dimnames=list(colnames(data), c('h', paste('g',1:(1+(ncol(env)-1)), sep='.'), 
-								paste('J',colnames(data),sep='.')) ))
+        		     dimnames=list(colnames(data), c('h', gname, 
+					   paste('J',colnames(data),sep='.')) ))
         					
     	for(i in 1:rep)fittingRes <- fittingRes + fittingMat[[i]]
     }
