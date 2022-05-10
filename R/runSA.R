@@ -103,7 +103,7 @@ runSAparallel <- function(data=NULL, env=NULL,
         cat(sprintf('\nDone ; elapsed time %.2f sec\n\n', proc.time()[3]-s))	
         ## ============================================== ##
 	if( !is.null(env) ){ 
-	    gname <- paste('g', colnames(env), '.') 
+	    gname <- paste('g', colnames(env), sep='.') 
 	}else{
 	    gname <- paste('g',1:(1+(ncol(env)-1)), sep='.')	
 	}
