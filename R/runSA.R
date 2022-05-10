@@ -63,12 +63,8 @@ runSA <- function(data=NULL, env=NULL,
 #' @importFrom doParallel registerDoParallel
 #' @export
 runSAparallel <- function(data=NULL, env=NULL, 
-                   	  rep=16, max.itr=10000,
-			  thread=1){
-	
-    cluster = makeCluster(thread, "FORK")
-    registerDoParallel(cluster)
-	
+                   	  rep=16, max.itr=10000){
+
     if(is.null(env)){
     	
     	## ============================================== ##
