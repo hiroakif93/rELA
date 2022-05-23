@@ -42,7 +42,7 @@ arma::mat OnestepHBS(arma::mat y, arma::mat lm) {
   int itr1=y.n_cols;
   int itr2=y.n_rows;
 
-  for(int r=0; r < itr2; r++){
+  for(int r=0; r < itr2; ++r){
     
     // Initial state //
     int uni=R::runif(0, itr1);
@@ -107,7 +107,7 @@ arma::mat SA_simple( arma::mat ocData, double maxInt=50000, double momentum=0.3)
   // Main part
   double learningrate=0.1;
   double  momtm=0.3;
-  for(int tt=0; tt < maxInt; tt++){
+  for(int tt=0; tt < maxInt; ++tt){
     //double learningrate=learningrate0*1000/(998+1+tt);
     //double momtm=0.9*(1-1/(0.1*tt+2));
     
@@ -184,7 +184,7 @@ arma::mat SA( arma::mat ocData, arma::mat envData, double maxInt=50000, double m
   // ========================================= //
   // Main part
   
-  for(int tt=0; tt < maxInt; tt++){
+  for(int tt=0; tt < maxInt; ++tt){
     double learningrate=learningrate0*1000/(998+1+tt);
     double momtm=0.9*(1-1/(0.1*tt+2));
     
@@ -204,7 +204,7 @@ arma::mat SA( arma::mat ocData, arma::mat envData, double maxInt=50000, double m
     
     // -- Alpha gradient
     alphasgrad = (ydif.diag().t() + Logprior(alphas, 2))/mat(1, alphas.n_cols).fill(nlocation);
-    alphaegrad = (yenvdiff+Logprior(alphae,2))/mat(alphae.n_rows, alphae.n_cols).fill(nlocation);
+    alphaegrad = (yenvdiff+Logprior(alphae,2))/mat(1, alphae.n_cols).fill(nlocation);
     
     // -- delta
     betagrad %= mat(betagrad.n_rows, betagrad.n_cols).fill((1-momtm)*learningrate);

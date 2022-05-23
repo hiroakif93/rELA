@@ -13,41 +13,182 @@ ELA <- function(alpha=alpha, J=jj,
                 SS.itr=20000,
                 FindingTip.itr=10000){ 
     start <- proc.time()[3]
-    ## ================================ ##
+    ## =============================================== ##
     ## -- Stable state
     minsets=SSestimate(alpha, J, itr=SS.itr)
     minsets=unique(round(minsets, digits=8))
-    stablestate=t(apply(minsets, 1, 
-                        function(x){ ssid=strtoi( paste0(x[-ncol(minsets)], collapse=''), base=2)
-                        c(ssid, x[ncol(minsets)]) }))
     
-    ## ================================ ##
+    minsets <- minsets[order(minsets[,ncol(minsets)]),]
+    
+    ssid <- sprintf('SS_%s', formatC(1:nrow(minsets), 
+                             width = nchar(ncol(minsets)), flag = "0"))
+    rownames(minsets) <- ssid
+
+    ## ================================================ ##
     ## -- Tipping point
     comb=expand.grid(1:nrow(minsets), 1:nrow(minsets))
-    tippointSummary <- tippoint <- c()
-    for(k in 1:nrow(comb)){#k=3
+    comb <- comb[comb[,1]!=comb[,2],2:1]
+    
+    tpmat <- matrix(Inf, ncol=nrow(comb), nrow=nrow(minsets))
+    dimnames(tpmat) <- list(rownames(minsets), 1:ncol(tpmat))
+ 
+    tipsummary <- c()
+
+    ## |||||||||||||||||||||||||||||||||||||||||||||||| ##
+    for(k in 1:nrow(comb)){#k=11
+        
+        ## |||||||||||||||||||||||||||||||||||||||||||| ##
+        
+        minsetsub <- minsets[as.integer(comb[k,]), ]
+        ss1=minsetsub[1, -ncol(minsets)]
+        ss2=minsetsub[2, -ncol(minsets)]
+        
+        ## |||||||||||||||||||||||||||||||||||||||||||| ##
+        
         if(comb[k,1] < comb[k,2] ){
-            ss1=minsets[comb[k,1], -ncol(minsets)]
-            ss2=minsets[comb[k,2], -ncol(minsets)]
-                                                              
+            
+            ## |||||||||||||||||||||||||||||||||||||||| ##
+            
             tippoint.tmp=FindingTippingpoint_cpp(s1=ss1, s2=ss2,
                                           alpha=alpha, jj=J, 
                                           tmax=FindingTip.itr)
-            tipstate <- t(apply(tippoint.tmp, 1, 
-                                function(x){ tipid=strtoi( paste0(x[-ncol(minsets)], collapse=''), base=2)
-                                c(tipid, x[ncol(minsets)]) }))
-            tippointSummary <- rbind(tippointSummary, tipstate)
-            tippoint <- rbind(tippoint, tippoint.tmp)
-        }else{
-            tippointSummary <- rbind(tippointSummary, c(Inf, Inf))
+            state=paste0(tippoint.tmp[-ncol(tippoint.tmp)], collapse='')
+            energy=tippoint.tmp[ncol(tippoint.tmp)]
+            
+            rownames(tippoint.tmp) <- state
+            tipsummary <- rbind(tipsummary, tippoint.tmp)
+            
+            ## |||||||||||||||||||||||||||||||||||||||| ##
+
+            tpmat[rownames(minsetsub),k] <- energy
+            colnames(tpmat)[k] <- state
+            ## |||||||||||||||||||||||||||||||||||||||| ##
         }
     }
     
-    rbind(data.frame('State'='stable', stablestate), data.frame('State'='tip', tippointSummary))
+    ## ================================================ ##
+    ## -- Summarize
+    
+    infCol <- apply(tpmat, 2, function(x){ sum(is.infinite(x))})
+    tpmat <- tpmat[,infCol<nrow(tpmat)]
+    TPuniq <- table(colnames(tpmat))
+    
+    ## |||||||||||||||||||||||||||||||||||||||||||||||| ##
+
+    tpNode <- sprintf('TPnode_%s', formatC(1:ncol(tpmat), width = nchar(ncol(tpmat)), flag = "0"))
+    
+    countTab <- table(data.frame(colnames(tpmat), tpNode))
+    tpid <- sprintf('TP_%s', formatC(1:nrow(countTab), width = nchar(nrow(countTab)), flag = "0"))
+    tp.id.state <- data.frame(tpid, row.names=rownames(countTab))
+    
+    tplist <- c()
+    for(i in 1:nrow(countTab)){
+        r <- countTab[i,]
+        tplist[[sprintf('%s',tpid[i]) ]] <- names(r[r>0])
+    }
+    
+    ## |||||||||||||||||||||||||||||||||||||||||||||||| ##
+
+    tipSummSub <- unique(tipsummary)
+    rownames(tipSummSub) <- tp.id.state[rownames(tipSummSub), ]
+    
+    stateInfo <- rbind(minsets, tipSummSub)
+    colnames(stateInfo) <- c(rownames(J), 'energy')
+    
+    colnames(tpmat) <- tpNode
+    elasummary <- list(stateInfo=stateInfo, matrix=cbind(SSenergy=minsets[,ncol(minsets)], tpmat), tplist=tplist)
     ## ================================ ##
     end <- proc.time()[3]
     cat(sprintf('Elapsed time %.2f sec\n', end-start))
+    
+    return(elasummary)
 }
+
+#'ELA Pluning
+#'@description Pluning shallow basin
+#'
+#'@param elasummary : elasummary is a output of ELA function.
+#'@param th : th is a threshold which the range is 0 to 1.
+#'@export
+ELplunning <- function(elasummary, th=0.9){
+    
+    stateInfo <- elasummary[[1]]
+    elaMat <- elasummary[[2]]
+    
+    ## ========================================== ##
+    ## -- Difference between stable state energy
+    sub <- elaMat[,-1]
+    eneDiff <- sub-elaMat[,1]
+    
+    ## ========================================== ##
+    ## -- Ranking between two stable states
+    ssene <- elaMat[,1]
+    pair <-  t(combn(rownames(elaMat), 2))
+    
+    pax <- c()
+    for(i in 1:nrow(pair)){
+        pairSort <- sort( ssene[pair[i,]])
+        
+        pairEneDiff <- eneDiff[names(pairSort),]
+        tpid <- which(colSums(is.infinite(pairEneDiff))==0)
+        paxtmp <- pairEneDiff[,tpid]
+        
+        pax <- rbind(pax, data.frame(deep=names(paxtmp)[which.max(paxtmp)], 
+                                     shallow=names(paxtmp)[which.min(paxtmp)],  
+                                     min=min(paxtmp), tp=names(tpid)) )
+    }
+    
+    paxmax <- max(pax[,3])
+    
+    ## ========================================== ##
+    elaMattmp <- elaMat
+    log <- data.frame(row.names=names(ssene), change=names(ssene))
+    t=0
+    while( min(pax[,3]) < paxmax*th & nrow(elaMattmp)>2){
+        t=t+1
+        ## |||||||||||||||||||||||||||||||||||||| ##
+        ssenetmp <- elaMattmp[,1]
+        sub <- elaMattmp[,-1]
+        eneDiff <- apply(sub, 2, function(x){x-elaMattmp[,1]})
+        
+        pair <-  t(combn(rownames(elaMattmp), 2))
+        
+        pax <- c()
+        for(i in 1:nrow(pair)){
+            pairSort <- sort( ssenetmp[pair[i,]])
+            
+            pairEneDiff <- eneDiff[names(pairSort),]
+            tpid <- which(colSums(is.infinite(pairEneDiff))==0)
+            paxtmp <- pairEneDiff[,tpid]
+            
+            pax <- rbind(pax, data.frame(deep=names(paxtmp)[which.max(paxtmp)], 
+                                         shallow=names(paxtmp)[which.min(paxtmp)],  
+                                         min=min(paxtmp), tp=names(tpid)) )
+        }
+        
+        paxmax <- max(pax[,3])
+        pp <- pax[which.min(pax[,3]), ]
+        
+        ## |||||||||||||||||||||||||||||||||||||| ##
+        
+        log[as.character(pp['shallow']), 'change'] <- as.character(pp['deep'])
+        
+        elaMattmp <- elaMattmp[-which(rownames(elaMattmp) == as.character(pp['shallow'])),]
+        elaMattmp <- elaMattmp[,-which(colnames(elaMattmp) == as.character(pp['tp']))]
+        
+        countInf <- colSums(!is.infinite(elaMattmp))
+        elaMattmp <- elaMattmp[, -which(countInf<2)]
+        
+        ## |||||||||||||||||||||||||||||||||||||| ##
+        
+    }
+    
+    return(list(matrix=elaMattmp, log=log))
+    ## ========================================== ##
+    
+    
+}
+
 
 #'SteepestDescent
 #' @export

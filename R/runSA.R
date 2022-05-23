@@ -59,8 +59,6 @@ runSA <- function(data=NULL, env=NULL,
 #'Parallel stochastic Approximation
 #' @importFrom Rcpp sourceCpp
 #' @importFrom foreach foreach
-#' @importFrom parallel makeCluster
-#' @importFrom doParallel registerDoParallel
 #' @export
 runSAparallel <- function(data=NULL, env=NULL, 
                    	  rep=16, max.itr=10000){
@@ -81,7 +79,7 @@ runSAparallel <- function(data=NULL, env=NULL,
         
         cat(sprintf('\nDone ; elapsed time %.2f sec\n\n', proc.time()[3]-s))	
         ## ============================================== ##
-	fittingRes <- matrix(0, ncol=ncol(data)+1, nrow=ncol(data),
+		fittingRes <- matrix(0, ncol=ncol(data)+1, nrow=ncol(data),
         		     dimnames=list(colnames(data), c('h', paste('J',colnames(data),sep='.')) ))
         					
     	for(i in 1:rep)fittingRes <- fittingRes + fittingMat[[i]]
