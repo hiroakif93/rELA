@@ -11,37 +11,35 @@
 using namespace arma;
 using namespace Rcpp;
 
+// [[Rcpp::plugins(cpp11)]]
 
 //======================================================//
 
 //////////////////////////////////////////////////////////
 //              Stchastic Approximationes               //
 //////////////////////////////////////////////////////////
-// -- Functions for Stochastic Approximation
-arma::mat Logmodel(arma::mat m, arma::mat alpha, arma::mat beta){
+inline arma::mat Logmodel(arma::mat m,  const arma::mat& alpha, const arma::mat& beta){
   
   m *= beta;
-  mat res = 1/(exp(-alpha - m)+1);
+  const arma::mat& res = 1/(exp(-alpha - m)+1);
   
   return res;
 }
 
-arma::mat Logmodel_simple(arma::mat m, arma::mat alpha, arma::mat beta){
+inline arma::mat Logmodel_simple(arma::mat m, const arma::mat& alpha, const arma::mat& beta){
   
   m *= beta;
-
-  mat res = 1/(exp(-alpha - m.each_row())+1);
+  const arma::mat& res = 1/(exp(-alpha - m.each_row())+1);
   
   return res;
 }
-
 // One step "Heat Bath Sampling"
-arma::mat OnestepHBS(arma::mat y, arma::mat lm) {
+arma::mat OnestepHBS(arma::mat y, const arma::mat& lm) {
   
   // Preparation // 
-  int itr1=y.n_cols;
-  int itr2=y.n_rows;
-
+  const int& itr1=y.n_cols;
+  const int& itr2=y.n_rows;
+  
   for(int r=0; r < itr2; ++r){
     
     // Initial state //
@@ -62,8 +60,33 @@ arma::mat OnestepHBS(arma::mat y, arma::mat lm) {
   return y;
 }
 
+// One step "Heat Bath Sampling"
+void OnestepHBSvoid(arma::mat& y, const arma::mat& lm) {
+  
+  // Preparation // 
+  const int& itr1=y.n_cols;
+  const int& itr2=y.n_rows;
+  
+  for(int r=0; r < itr2; ++r){
+    
+    // Initial state //
+    const int& uni=R::runif(0, itr1);
+    const double& ne=lm(r, uni);
+    
+    const double& randomNum=randu<double>();
+    
+    // adjacency state//
+    if(ne > randomNum){
+      y(r, uni) = 1;
+    }else{
+      y(r, uni) = 0;
+    }
+    
+  }
+  
+}
 
-arma::mat Logprior(arma::mat alpha, double x) {
+inline arma::mat Logprior(const arma::mat& alpha, const double& x) {
   
   mat y = zeros(alpha.n_rows, alpha.n_cols);
   y.fill(x);
@@ -76,22 +99,22 @@ arma::mat Logprior(arma::mat alpha, double x) {
 //========  only Inplicit environmetanl data ===========//
 
 // [[Rcpp::export]]
-arma::mat SA_simple( arma::mat ocData, double maxInt=50000, double momentum=0.3){
+arma::mat SA_simple( const arma::mat& ocData, const double& maxInt=50000, const double& momentum=0.3){
   
   // ========================================= //
   // -- Initial parameter setting
   
-  double nlocation = ocData.n_rows;
-  double nspecies = ocData.n_cols;
+  const double& nlocation = ocData.n_rows;
+  const double& nspecies = ocData.n_cols;
   
   mat ystats=trans(ocData);
   ystats *= ocData;
   
   mat ysim = zeros(nlocation, nspecies);
   
-  mat lp = ( sum(ocData, 0)+1 )/(nlocation+2);
+  const mat& lp = ( sum(ocData, 0)+1 )/(nlocation+2);
   mat alphas = log(lp/(1-lp));
-
+  
   mat beta = zeros(nspecies, nspecies);
   
   mat delalphas=zeros(1, nspecies); 
@@ -101,37 +124,40 @@ arma::mat SA_simple( arma::mat ocData, double maxInt=50000, double momentum=0.3)
   mat alphasgrad;
   
   mat logmat;  mat ydif ;
-  //double learningrate0=0.1;
+  const double& learningrate0=0.1;
+  
+  const mat& betaconst=(nlocation * abs(eye(nspecies, nspecies)-1));
+  const rowvec& asconst=(mat(1, nspecies).fill(nlocation));
   
   // ========================================= //
   // Main part
-  double learningrate=0.1;
-  double  momtm=0.3;
+  //double learningrate=0.1;
+  //double  momtm=0.3;
   for(int tt=0; tt < maxInt; ++tt){
-    //double learningrate=learningrate0*1000/(998+1+tt);
-    //double momtm=0.9*(1-1/(0.1*tt+2));
+    const double& learningrate=learningrate0*1000/(998+1+tt);
+    const double& momtm=0.9*(1-1/(0.1*tt+2));
     
     // -- Preference for co-occurence of species i and j
     logmat=Logmodel_simple(ysim, alphas, beta);
-    ysim=OnestepHBS(ysim, logmat);
+    OnestepHBSvoid(ysim, logmat);
     
     //mat ysimstats=trans(ysim) * ysim;
     ydif = ystats - (trans(ysim) * ysim);
     
     // -- Beta gradient 
-    betagrad = (ydif + Logprior(beta, 0.5)) / (nlocation * abs(eye(nspecies, nspecies)-1)) ;
+    betagrad = (ydif + Logprior(beta, 0.5)) / betaconst ;
     betagrad.diag().fill(0);
-    
-    // -- Alpha gradient
-    alphasgrad = (ydif.diag().t() + Logprior(alphas, 2))/(mat(1, alphas.n_cols).fill(nlocation));
-    
-    // -- delta
-    betagrad %= mat(betagrad.n_rows, betagrad.n_cols).fill((1-momtm)*learningrate);
-    delbeta %= mat(betagrad.n_rows, betagrad.n_cols).fill(momtm);
-    delbeta += betagrad;
 
-    alphasgrad %= mat(alphasgrad.n_rows, alphasgrad.n_cols).fill((1-momtm)*learningrate) ;
-    delalphas %= mat(alphasgrad.n_rows, alphasgrad.n_cols).fill(momtm);
+    // -- Alpha gradient
+    alphasgrad = (ydif.diag().t() + Logprior(alphas, 2))/asconst;
+  
+    // -- delta
+    betagrad %= mat(nspecies, nspecies).fill((1-momtm)*learningrate);
+    delbeta %= mat(nspecies, nspecies).fill(momtm);
+    delbeta += betagrad;
+    
+    alphasgrad %= mat(1, nspecies).fill((1-momtm)*learningrate) ;
+    delalphas %= mat(1, nspecies).fill(momtm);
     delalphas += alphasgrad ;
     
     beta+=delbeta; 
@@ -139,7 +165,7 @@ arma::mat SA_simple( arma::mat ocData, double maxInt=50000, double momentum=0.3)
   }
   
   // ========================================= //
-
+  
   
   mat ystatsList=join_rows(alphas.t(),beta.t());
   return ystatsList;
@@ -150,14 +176,14 @@ arma::mat SA_simple( arma::mat ocData, double maxInt=50000, double momentum=0.3)
 //========  including Explicit environmetanl data ======//
 
 // [[Rcpp::export]]
-arma::mat SA( arma::mat ocData, arma::mat envData, double maxInt=50000, double momentum=0.3){
+arma::mat SA( const arma::mat& ocData, const arma::mat& envData, const double& maxInt=50000, const double& momentum=0.3){
   
   // ========================================= //
   // -- Initial parameter setting
   
-  double nlocation = ocData.n_rows;
-  double nspecies = ocData.n_cols;
-  double nenvironment = envData.n_cols;
+  const double& nlocation = ocData.n_rows;
+  const double& nspecies = ocData.n_cols;
+  const double& nenvironment = envData.n_cols;
   
   mat ystats = trans(ocData) * ocData;
   mat yenvstats = trans(envData) * ocData;
@@ -165,7 +191,7 @@ arma::mat SA( arma::mat ocData, arma::mat envData, double maxInt=50000, double m
   mat ysim = zeros(nlocation, nspecies);
   mat alphae = zeros(nenvironment, nspecies);
   
-  mat lp = ( sum(ocData, 0)+1 )/(nlocation+2);
+  const mat& lp = ( sum(ocData, 0)+1 )/(nlocation+2);
   mat alphas = log(lp/(1-lp));
   
   mat beta = zeros(nspecies, nspecies);
@@ -179,44 +205,47 @@ arma::mat SA( arma::mat ocData, arma::mat envData, double maxInt=50000, double m
   mat alphaegrad = zeros(nspecies, nspecies);
   mat alpha; mat logmat; mat ydif; mat yenvdiff;
   
-  //double learningrate0=0.1;
-  double learningrate0=0.1;
+  const mat& betaconst=(nlocation * abs(eye(nspecies, nspecies)-1));
+  const rowvec& asconst=(mat(1, nspecies).fill(nlocation));
+  const rowvec& aeconst=(mat(nenvironment, nspecies).fill(nlocation));
+  
+  const double& learningrate0=0.1;
   // ========================================= //
   // Main part
   
   for(int tt=0; tt < maxInt; ++tt){
-    double learningrate=learningrate0*1000/(998+1+tt);
-    double momtm=0.9*(1-1/(0.1*tt+2));
+    const double& learningrate=learningrate0*1000/(998+1+tt);
+    const double& momtm=0.9*(1-1/(0.1*tt+2));
     
     // -- Preference for co-occurence of species i and j
     alpha=mat(envData * alphae).each_row() + alphas;
     
     // -- 
     logmat=Logmodel(ysim, alpha, beta);
-    ysim=OnestepHBS(ysim, logmat);
-
+    OnestepHBSvoid(ysim, logmat);
+    
     ydif = ystats - (trans(ysim) * ysim);
     yenvdiff= yenvstats-(trans(envData) * ysim);
     
     // -- Beta gradient 
-    betagrad = (ydif + Logprior(beta, 0.5)) / (nlocation * abs(eye(nspecies, nspecies)-1) );
+    betagrad = (ydif + Logprior(beta, 0.5)) / betaconst;
     betagrad.diag().fill(0);
     
     // -- Alpha gradient
-    alphasgrad = (ydif.diag().t() + Logprior(alphas, 2))/mat(1, alphas.n_cols).fill(nlocation);
-    alphaegrad = (yenvdiff+Logprior(alphae,2))/mat(nenvironment, alphae.n_cols).fill(nlocation);
-    
-    // -- delta
-    betagrad %= mat(betagrad.n_rows, betagrad.n_cols).fill((1-momtm)*learningrate);
-    delbeta %= mat(betagrad.n_rows, betagrad.n_cols).fill(momtm);
-    delbeta += betagrad;
-      
-    alphasgrad %=mat(alphasgrad.n_rows, alphasgrad.n_cols).fill((1-momtm)*learningrate) ;
-    delalphas %=mat(alphasgrad.n_rows, alphasgrad.n_cols).fill(momtm);
-    delalphas+=alphasgrad ;   
+    alphasgrad = (ydif.diag().t() + Logprior(alphas, 2))/asconst;
+    alphaegrad = (yenvdiff+Logprior(alphae,2))/aeconst;
 
-    alphaegrad %= mat(alphaegrad.n_rows, alphaegrad.n_cols).fill((1-momtm)*learningrate);
-    delalphae %= mat(alphaegrad.n_rows, alphaegrad.n_cols).fill(momtm);
+    // -- delta
+    betagrad %= mat(nspecies, nspecies).fill((1-momtm)*learningrate);
+    delbeta %= mat(nspecies, nspecies).fill(momtm);
+    delbeta += betagrad;
+    
+    alphasgrad %=mat(1, nspecies).fill((1-momtm)*learningrate) ;
+    delalphas %=mat(1, nspecies).fill(momtm);
+    delalphas+=alphasgrad ;   
+    
+    alphaegrad %= mat(nenvironment, nspecies).fill((1-momtm)*learningrate);
+    delalphae %= mat(nenvironment, nspecies).fill(momtm);
     delalphae += alphaegrad;
     
     beta+=delbeta; 
@@ -244,7 +273,7 @@ arma::mat SA( arma::mat ocData, arma::mat envData, double maxInt=50000, double m
 
 // -- Community Energy
 // [[Rcpp::export]]
-double cEnergy(arma::rowvec state, arma::rowvec alpha, arma::mat beta){
+inline double cEnergy(const arma::rowvec& state, const arma::rowvec& alpha, const arma::mat& beta){
   
   mat res = -state * alpha.t() - (state* (state * beta).t() ) / 2;
   return as_scalar(res);
@@ -254,64 +283,64 @@ double cEnergy(arma::rowvec state, arma::rowvec alpha, arma::mat beta){
 
 // [[Rcpp::export]]
 arma::mat SteepestDescent_cpp(arma::rowvec state, arma::rowvec alpha, arma::mat beta){
-
-    // ================================ //
-    int term=0; 
-    mat energi; 
-    mat y1 = conv_to<mat>::from(state);
-    double y2 = cEnergy(state, alpha, beta); 
-    // ================================ //
+  
+  // ================================ //
+  int term=0; 
+  mat energi; 
+  mat y1 = conv_to<mat>::from(state);
+  double y2 = cEnergy(state, alpha, beta); 
+  // ================================ //
+  
+  do{
+    // ============================= //
+    mat ystat = y1;
+    double yene = y2;
+    // ============================= //
     
-    do{
-        // ============================= //
-        mat ystat = y1;
-        double yene = y2;
-        // ============================= //
-        
-        // -- Energy
-        energi = -alpha-ystat*beta;
-        mat sign = (-2 * ystat +1);
-        energi %=sign; energi +=yene;
-        
-        double minene =energi.min() ;
-        if( minene < yene ){
-          uword mp = energi.index_min();
-          ystat(0, mp) = abs(ystat(0, mp)-1);
-          
-          y1.swap(ystat);
-          y2 = minene;
-          
-        }else{
-          term+=1;
-        }
-    } while (term==0);
+    // -- Energy
+    energi = -alpha-ystat*beta;
+    mat sign = (-2 * ystat +1);
+    energi %=sign; energi +=yene;
     
-    return join_rows(y1, mat(1,1).fill(y2));
-   
+    double minene =energi.min() ;
+    if( minene < yene ){
+      uword mp = energi.index_min();
+      ystat(0, mp) = abs(ystat(0, mp)-1);
+      
+      y1.swap(ystat);
+      y2 = minene;
+      
+    }else{
+      term+=1;
+    }
+  } while (term==0);
+  
+  return join_rows(y1, mat(1,1).fill(y2));
+  
 }
 // [[Rcpp::export]]
 arma::mat SSestimate(arma::rowvec alpha, arma::mat beta, int itr=20000){
+  
+  mat res = zeros(itr, beta.n_cols+1);
+  
+  for(int i=0; i<itr; i++ ){
     
-    mat res = zeros(itr, beta.n_cols+1);
+    imat intmat=randi(1, beta.n_cols, arma::distr_param(0, 1));
+    rowvec state=conv_to<rowvec>::from(intmat);
     
-    for(int i=0; i<itr; i++ ){
-      
-      imat intmat=randi(1, beta.n_cols, arma::distr_param(0, 1));
-      rowvec state=conv_to<rowvec>::from(intmat);
-      
-      mat ss = SteepestDescent_cpp(state, alpha, beta);
-      
-      res.row(i) = ss;
-    }
-    return res;
+    mat ss = SteepestDescent_cpp(state, alpha, beta);
+    
+    res.row(i) = ss;
+  }
+  return res;
 }
 
 //////////////////////////////////////////////////////////
 
 // [[Rcpp::export]]
 arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2, 
-                            arma::rowvec alpha, arma::mat jj,
-                            int tmax=10000){
+                                     arma::rowvec alpha, arma::mat jj,
+                                     int tmax=10000){
   
   // ======================================= //
   // Distance between stable states
@@ -319,7 +348,7 @@ arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2,
   rowvec sequ=conv_to<rowvec>::from(shuffle(pd));
   rowvec tipState(alpha.n_elem+1);
   mat samplePath;
-
+  
   // ======================================= //
   // ||||||||||||||||||||||||||||||||||| //
   // -- Definition
@@ -330,8 +359,8 @@ arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2,
   rowvec seqnew;
   double bdenew;
   int cc;
-  int SMrow=sequ.n_elem+1;
-  int SMcol=s1.n_elem;
+  const int& SMrow=sequ.n_elem+1;
+  const int& SMcol=s1.n_elem;
   vec::fixed<2>c; 
   // ||||||||||||||||||||||||||||||||||| //
   
@@ -342,7 +371,7 @@ arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2,
     rpl = randperm(sequ.n_elem, 2);
     
     seqnew.swap_cols(rpl(0), rpl(1));
-
+    
     samplePath=join_rows(repmat(s1, SMrow, 1), zeros(SMrow,1));
     
     // ||||||||||||||||||||||||||||||||||| //
@@ -356,7 +385,7 @@ arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2,
       // reolace
       samplePath.submat(i, 0, SMrow-1, SMcol-1).col(cc)=pp;
       samplePath(i-1, SMcol)=cEnergy(conv_to<rowvec>::from(samplePath.submat(i-1, 0, i-1, SMcol-1)), alpha, jj);
-
+      
     }
     samplePath(SMrow-1, SMcol)=cEnergy(conv_to<rowvec>::from(samplePath.submat(SMrow-1, 0, SMrow-1, SMcol-1)), alpha, jj);
     // ||||||||||||||||||||||||||||||||||| //
@@ -366,7 +395,7 @@ arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2,
       minbde=std::move(bdenew);
       tipState.cols(0, SMcol-1)=samplePath.submat(samplePath.col(SMcol).index_max(), 0, samplePath.col(SMcol).index_max(), SMcol-1);
       tipState.col(tipState.n_cols-1)=minbde;
-
+      
     }
     
     c(0)=1; c(1)= ( (exp(bde))/(exp(bdenew)) );
@@ -374,19 +403,19 @@ arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2,
       sequ.swap(seqnew);
       bde=std::move(bdenew);
     }
-     
-  // ||||||||||||||||||||||||||||||||||| //
-  } while (tt<tmax);
     
+    // ||||||||||||||||||||||||||||||||||| //
+  } while (tt<tmax);
+  
   // ||||||||||||||||||||||||||||||||||| //
-
+  
   return tipState;
 }
 
 //////////////////////////////////////////////////////////
 
 // To stop calculation.
-int checkIdent(arma::mat ss, arma::rowvec ysim)
+int checkIdent(const arma::mat& ss, const arma::rowvec& ysim)
 {
   int rows=ss.n_rows;
   vec res(rows);
@@ -394,7 +423,7 @@ int checkIdent(arma::mat ss, arma::rowvec ysim)
   for(int l=0; l<rows; l++){
     res(l)=all(ysim==ss.row(l));
   }
-
+  
   return any(res);
 }
 
@@ -407,13 +436,13 @@ int convDec(arma::rowvec v)
     tmp=v(i);
     str+=std::to_string(tmp);
   }
-
+  
   return std::stoi(str, 0, 2); 
   
 }
 
 // Convert to string
-std::string convStr(arma::rowvec v)  {
+inline std::string convStr(const arma::rowvec& v)  {
   int tmp;
   std::string str;
   for(int i=0; i< v.n_elem; i++){
@@ -426,33 +455,32 @@ std::string convStr(arma::rowvec v)  {
 }
 
 // Entropy numeric
-// [[Rcpp::export]]
-double entropy(arma::vec v)
+inline double entropy(const arma::vec& v)
 {
   vec uniq=unique(v);
   int N=uniq.n_elem;
-  double total=v.n_elem;
-  double ent;
+  const double& total=v.n_elem;
+  double ent=0;
   
   for(int i=0; i<N; i++){
-    double prob=sum(v==uniq(i))/total;
+    const double& prob=sum(v==uniq(i))/total;
     ent+=prob*log(prob);
   }
- // Rcout << probV << endl;
+  // Rcout << probV << endl;
   
   return ent*(-1);
 }
 
 // Entropy string
-double entropy2(Rcpp::StringVector v)
+inline double entropy2(const Rcpp::StringVector& v)
 {
   IntegerVector tab=table(v);
-  double total=v.length();
-  NumericVector numtab=as<NumericVector>(tab);
+  const double& total=v.length();
+  //NumericVector numtab=as<NumericVector>(tab);
   
   double ent=0;
   for(int i=0; i<tab.size(); i++){
-    double prob=tab[i]/total;
+    const double& prob=tab[i]/total;
     ent+=prob*log(prob);
   }
   
@@ -461,8 +489,8 @@ double entropy2(Rcpp::StringVector v)
 
 // [[Rcpp::export]]
 arma::mat SSentropy_cpp(arma::mat uoc, arma::mat ss,
-                    arma::rowvec alpha, arma::mat beta, 
-                    int seitr=1000, int convTime=10000){
+                        arma::rowvec alpha, arma::mat beta, 
+                        int seitr=1000, int convTime=10000){
   
   mat entropyres=zeros(uoc.n_rows, 3);
   for(int i=0; i < uoc.n_rows; i++){
@@ -480,7 +508,7 @@ arma::mat SSentropy_cpp(arma::mat uoc, arma::mat ss,
         logmat=Logmodel_simple(ysim, alpha, beta);
         ysim=OnestepHBS(ysim, logmat);
         
-        if(checkIdent(ss=ss, ysim)==1){
+        if(checkIdent(ss, ysim)==1){
           break;
         }
       } while ( tt<convTime );
@@ -495,7 +523,6 @@ arma::mat SSentropy_cpp(arma::mat uoc, arma::mat ss,
     entropyres(i,1)=mean(stable.col(0));
     entropyres(i,2)=sum(stable.col(1));
   }
-
+  
   return entropyres;
 }
-

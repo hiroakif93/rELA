@@ -12,41 +12,41 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // SA_simple
-arma::mat SA_simple(arma::mat ocData, double maxInt, double momentum);
+arma::mat SA_simple(const arma::mat& ocData, const double& maxInt, const double& momentum);
 RcppExport SEXP _rELA_SA_simple(SEXP ocDataSEXP, SEXP maxIntSEXP, SEXP momentumSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type ocData(ocDataSEXP);
-    Rcpp::traits::input_parameter< double >::type maxInt(maxIntSEXP);
-    Rcpp::traits::input_parameter< double >::type momentum(momentumSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type ocData(ocDataSEXP);
+    Rcpp::traits::input_parameter< const double& >::type maxInt(maxIntSEXP);
+    Rcpp::traits::input_parameter< const double& >::type momentum(momentumSEXP);
     rcpp_result_gen = Rcpp::wrap(SA_simple(ocData, maxInt, momentum));
     return rcpp_result_gen;
 END_RCPP
 }
 // SA
-arma::mat SA(arma::mat ocData, arma::mat envData, double maxInt, double momentum);
+arma::mat SA(const arma::mat& ocData, const arma::mat& envData, const double& maxInt, const double& momentum);
 RcppExport SEXP _rELA_SA(SEXP ocDataSEXP, SEXP envDataSEXP, SEXP maxIntSEXP, SEXP momentumSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type ocData(ocDataSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type envData(envDataSEXP);
-    Rcpp::traits::input_parameter< double >::type maxInt(maxIntSEXP);
-    Rcpp::traits::input_parameter< double >::type momentum(momentumSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type ocData(ocDataSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type envData(envDataSEXP);
+    Rcpp::traits::input_parameter< const double& >::type maxInt(maxIntSEXP);
+    Rcpp::traits::input_parameter< const double& >::type momentum(momentumSEXP);
     rcpp_result_gen = Rcpp::wrap(SA(ocData, envData, maxInt, momentum));
     return rcpp_result_gen;
 END_RCPP
 }
 // cEnergy
-double cEnergy(arma::rowvec state, arma::rowvec alpha, arma::mat beta);
+inline double cEnergy(const arma::rowvec& state, const arma::rowvec& alpha, const arma::mat& beta);
 RcppExport SEXP _rELA_cEnergy(SEXP stateSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::rowvec >::type state(stateSEXP);
-    Rcpp::traits::input_parameter< arma::rowvec >::type alpha(alphaSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const arma::rowvec& >::type state(stateSEXP);
+    Rcpp::traits::input_parameter< const arma::rowvec& >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
     rcpp_result_gen = Rcpp::wrap(cEnergy(state, alpha, beta));
     return rcpp_result_gen;
 END_RCPP
@@ -92,17 +92,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// entropy
-double entropy(arma::vec v);
-RcppExport SEXP _rELA_entropy(SEXP vSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type v(vSEXP);
-    rcpp_result_gen = Rcpp::wrap(entropy(v));
-    return rcpp_result_gen;
-END_RCPP
-}
 // SSentropy_cpp
 arma::mat SSentropy_cpp(arma::mat uoc, arma::mat ss, arma::rowvec alpha, arma::mat beta, int seitr, int convTime);
 RcppExport SEXP _rELA_SSentropy_cpp(SEXP uocSEXP, SEXP ssSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP seitrSEXP, SEXP convTimeSEXP) {
@@ -127,7 +116,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rELA_SteepestDescent_cpp", (DL_FUNC) &_rELA_SteepestDescent_cpp, 3},
     {"_rELA_SSestimate", (DL_FUNC) &_rELA_SSestimate, 3},
     {"_rELA_FindingTippingpoint_cpp", (DL_FUNC) &_rELA_FindingTippingpoint_cpp, 5},
-    {"_rELA_entropy", (DL_FUNC) &_rELA_entropy, 1},
     {"_rELA_SSentropy_cpp", (DL_FUNC) &_rELA_SSentropy_cpp, 6},
     {NULL, NULL, 0}
 };

@@ -25,10 +25,6 @@ FindingTippingpoint_cpp <- function(s1, s2, alpha, jj, tmax = 10000L) {
     .Call(`_rELA_FindingTippingpoint_cpp`, s1, s2, alpha, jj, tmax)
 }
 
-entropy <- function(v) {
-    .Call(`_rELA_entropy`, v)
-}
-
 SSentropy_cpp <- function(uoc, ss, alpha, beta, seitr = 1000L, convTime = 10000L) {
     .Call(`_rELA_SSentropy_cpp`, uoc, ss, alpha, beta, seitr, convTime)
 }

@@ -100,13 +100,15 @@ runSAparallel <- function(data=NULL, env=NULL,
       
         cat(sprintf('\nDone ; elapsed time %.2f sec\n\n', proc.time()[3]-s))	
         ## ============================================== ##
-	if( !is.null(env) ){ 
+	if( ncol(as.matrix(env))==1 ){ 
 	    gname <- paste('g', colnames(env), sep='.') 
+	    ncols <- ncol(data)+2
 	}else{
 	    gname <- paste('g',1:(1+(ncol(env)-1)), sep='.')	
+	    ncols <- ncol(data)+2+(ncol(env)-1)
 	}
 	    
-        fittingRes <- matrix(0, ncol=ncol(data)+2+(ncol(env)-1), nrow=ncol(data),
+        fittingRes <- matrix(0, ncol= ncols, nrow=ncol(data),
         		     dimnames=list(colnames(data), c('h', gname, 
 					   paste('J',colnames(data),sep='.')) ))
         					
