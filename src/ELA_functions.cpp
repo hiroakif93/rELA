@@ -204,7 +204,7 @@ arma::mat SA( arma::mat ocData, arma::mat envData, double maxInt=50000, double m
     
     // -- Alpha gradient
     alphasgrad = (ydif.diag().t() + Logprior(alphas, 2))/mat(1, alphas.n_cols).fill(nlocation);
-    alphaegrad = (yenvdiff+Logprior(alphae,2))/mat(1, alphae.n_cols).fill(nlocation);
+    alphaegrad = (yenvdiff+Logprior(alphae,2))/mat(nenvironment, alphae.n_cols).fill(nlocation);
     
     // -- delta
     betagrad %= mat(betagrad.n_rows, betagrad.n_cols).fill((1-momtm)*learningrate);
