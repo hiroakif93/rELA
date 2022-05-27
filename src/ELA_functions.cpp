@@ -289,22 +289,28 @@ arma::mat SteepestDescent_cpp(arma::rowvec state, arma::rowvec alpha, arma::mat 
   mat energi; 
   mat y1 = conv_to<mat>::from(state);
   double y2 = cEnergy(state, alpha, beta); 
+  
+  mat ystat;
+  double yene;
+  mat sign;
+  double minene;
+  uword mp;
   // ================================ //
   
   do{
     // ============================= //
-    mat ystat = y1;
-    double yene = y2;
+    ystat= y1;
+    yene = y2;
     // ============================= //
     
     // -- Energy
     energi = -alpha-ystat*beta;
-    mat sign = (-2 * ystat +1);
+    sign = (-2 * ystat +1);
     energi %=sign; energi +=yene;
     
-    double minene =energi.min() ;
+    minene =energi.min() ;
     if( minene < yene ){
-      uword mp = energi.index_min();
+      mp = energi.index_min();
       ystat(0, mp) = abs(ystat(0, mp)-1);
       
       y1.swap(ystat);
@@ -322,13 +328,16 @@ arma::mat SteepestDescent_cpp(arma::rowvec state, arma::rowvec alpha, arma::mat 
 arma::mat SSestimate(arma::rowvec alpha, arma::mat beta, int itr=20000){
   
   mat res = zeros(itr, beta.n_cols+1);
+  imat intmat;
+  rowvec state;
+  mat ss;
   
-  for(int i=0; i<itr; i++ ){
+  for(int i=0; i<itr; ++i ){
     
-    imat intmat=randi(1, beta.n_cols, arma::distr_param(0, 1));
-    rowvec state=conv_to<rowvec>::from(intmat);
+    intmat=randi(1, beta.n_cols, arma::distr_param(0, 1));
+    state=conv_to<rowvec>::from(intmat);
     
-    mat ss = SteepestDescent_cpp(state, alpha, beta);
+    ss = SteepestDescent_cpp(state, alpha, beta);
     
     res.row(i) = ss;
   }
@@ -375,7 +384,7 @@ arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2,
     samplePath=join_rows(repmat(s1, SMrow, 1), zeros(SMrow,1));
     
     // ||||||||||||||||||||||||||||||||||| //
-    for( int i=1; i<(SMrow); i++){
+    for( int i=1; i<(SMrow); ++i){
       
       // change column
       cc=conv_to<int>::from(seqnew.col(i-1)) ;
