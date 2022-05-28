@@ -346,6 +346,7 @@ arma::mat SSestimate(arma::rowvec alpha, arma::mat beta, int itr=20000){
 
 //////////////////////////////////////////////////////////
 
+
 // [[Rcpp::export]]
 arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2, 
                                      arma::rowvec alpha, arma::mat jj,
@@ -354,10 +355,11 @@ arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2,
   // ======================================= //
   // Distance between stable states
   uvec pd=find( abs(s1-s2)==1);
-  rowvec sequ=conv_to<rowvec>::from(shuffle(pd));
+  irowvec sequ=conv_to<irowvec>::from(shuffle(pd));
   rowvec tipState(alpha.n_elem+1);
-  mat samplePath;
-  
+
+  const int& sn=sequ.n_elem;
+
   // ======================================= //
   // ||||||||||||||||||||||||||||||||||| //
   // -- Definition
@@ -365,14 +367,19 @@ arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2,
   int tt=0 ;
   double minbde=datum::inf;
   uvec rpl;
-  rowvec seqnew;
+  irowvec seqnew;
   double bdenew;
-  int cc;
-  const int& SMrow=sequ.n_elem+1;
+  const int& SMrow=sn+1;
   const int& SMcol=s1.n_elem;
   vec::fixed<2>c; 
-  // ||||||||||||||||||||||||||||||||||| //
+  mat samplePath;
   
+  mat samplePathtmp=zeros(SMrow, SMcol);
+  samplePathtmp.row(0)=s1;
+  uvec v = linspace<uvec>(1,SMrow-1, SMrow-1);
+  vec CE=vec(SMrow);
+  
+  // ||||||||||||||||||||||||||||||||||| //
   do{
     tt+=1;
     // ||||||||||||||||||||||||||||||||||| //
@@ -381,28 +388,39 @@ arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2,
     
     seqnew.swap_cols(rpl(0), rpl(1));
     
-    samplePath=join_rows(repmat(s1, SMrow, 1), zeros(SMrow,1));
+    samplePath=samplePathtmp;
     
     // ||||||||||||||||||||||||||||||||||| //
-    for( int i=1; i<(SMrow); ++i){
+    int r=1;
+    
+    for(int l=0; l<sn; ++l){
+      const int& column=seqnew(l);
       
-      // change column
-      cc=conv_to<int>::from(seqnew.col(i-1)) ;
-      // replace mat
-      mat pp((SMrow-(i)), 1);
-      pp.fill(conv_to<int>::from( abs(samplePath.submat(i, cc, i, cc)-1) ) );
-      // reolace
-      samplePath.submat(i, 0, SMrow-1, SMcol-1).col(cc)=pp;
-      samplePath(i-1, SMcol)=cEnergy(conv_to<rowvec>::from(samplePath.submat(i-1, 0, i-1, SMcol-1)), alpha, jj);
+      for(int i=r; i<SMrow; ++i){
+  
+        samplePath(i, column)=1;
+        
+      }
+      r+=1;
+    }
+      
+    samplePath.each_row(v) -= s1;
+    samplePath=abs(samplePath);
+    
+    // ||||||||||||||||||||||||||||||||||| //
+    
+    for(int i=0; i<SMrow; ++i){
+      
+      CE(i)=cEnergy(samplePath.row(i), alpha, jj);
       
     }
-    samplePath(SMrow-1, SMcol)=cEnergy(conv_to<rowvec>::from(samplePath.submat(SMrow-1, 0, SMrow-1, SMcol-1)), alpha, jj);
     // ||||||||||||||||||||||||||||||||||| //
     
-    bdenew=samplePath.col(SMcol).max();
+    bdenew=CE.max();
     if(bdenew<minbde){
       minbde=std::move(bdenew);
-      tipState.cols(0, SMcol-1)=samplePath.submat(samplePath.col(SMcol).index_max(), 0, samplePath.col(SMcol).index_max(), SMcol-1);
+      
+      tipState.cols(0, SMcol-1)=samplePath.row(CE.index_max());
       tipState.col(tipState.n_cols-1)=minbde;
       
     }
@@ -415,10 +433,34 @@ arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2,
     
     // ||||||||||||||||||||||||||||||||||| //
   } while (tt<tmax);
-  
-  // ||||||||||||||||||||||||||||||||||| //
-  
+
   return tipState;
+}
+
+// [[Rcpp::export]]
+arma::mat TPestimate(const arma::mat& comb, arma::mat minset,
+                     arma::rowvec alpha, arma::mat beta, 
+                     const int& tmax=10000){
+  
+  const int& resrow=comb.n_rows;
+  mat res = zeros(resrow, beta.n_cols+1);
+  
+  int n; int m;
+  rowvec ss1; rowvec ss2; rowvec tp;
+  
+  for(int i=0; i<resrow; ++i ){
+    n=comb(i, 0);
+    m=comb(i, 1);
+    
+    ss1=minset.row(n);
+    ss2=minset.row(m);
+      
+    tp = FindingTippingpoint_cpp(ss1, ss2, alpha, beta, tmax);
+    
+    res.row(i) = tp;
+  }
+  
+  return res;
 }
 
 //////////////////////////////////////////////////////////

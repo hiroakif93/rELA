@@ -92,6 +92,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// TPestimate
+arma::mat TPestimate(const arma::mat& comb, arma::mat minset, arma::rowvec alpha, arma::mat beta, const int& tmax);
+RcppExport SEXP _rELA_TPestimate(SEXP combSEXP, SEXP minsetSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP tmaxSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type comb(combSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type minset(minsetSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const int& >::type tmax(tmaxSEXP);
+    rcpp_result_gen = Rcpp::wrap(TPestimate(comb, minset, alpha, beta, tmax));
+    return rcpp_result_gen;
+END_RCPP
+}
 // SSentropy_cpp
 arma::mat SSentropy_cpp(arma::mat uoc, arma::mat ss, arma::rowvec alpha, arma::mat beta, int seitr, int convTime);
 RcppExport SEXP _rELA_SSentropy_cpp(SEXP uocSEXP, SEXP ssSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP seitrSEXP, SEXP convTimeSEXP) {
@@ -116,6 +131,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rELA_SteepestDescent_cpp", (DL_FUNC) &_rELA_SteepestDescent_cpp, 3},
     {"_rELA_SSestimate", (DL_FUNC) &_rELA_SSestimate, 3},
     {"_rELA_FindingTippingpoint_cpp", (DL_FUNC) &_rELA_FindingTippingpoint_cpp, 5},
+    {"_rELA_TPestimate", (DL_FUNC) &_rELA_TPestimate, 5},
     {"_rELA_SSentropy_cpp", (DL_FUNC) &_rELA_SSentropy_cpp, 6},
     {NULL, NULL, 0}
 };
