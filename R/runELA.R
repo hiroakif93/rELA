@@ -101,7 +101,7 @@ ELAparallel <- function(alpha=alpha, J=jj,
                 thread=1){ 
     
     ## ||||||||||||||||||||||||||||||||||||| ##           	
-    for.parallel(thread)            	
+    #for.parallel(thread)            	
     start <- proc.time()[3]
 
 	speciesName <- rownames(J)
