@@ -36,24 +36,23 @@ ELA <- function(alpha=alpha, J=jj,
 	tpnodeID <- sprintf("TPnode_%s", formatC(1:nrow(comb), width = nchar(nrow(comb)), 
 	                             flag = "0"))
 	
-	FindTip <- c()
+	
+	FindTipRes <- TPestimate(as.matrix(comb), minset = minsets[,-ncol(minsets)],
+                       alpha, beta, 100000)
+
+	FindTip <- data.frame(matrix(NA, ncol=4, nrow=nrow(FindTipRes)) ,TP=tpnodeID, FindTipRes)
+	colnames(FindTip) <- c('SS1', 'SS1.energy', 'SS2', 'SS2.energy','TP',speciesName, "energy")
+	
 	for (k in 1:nrow(comb)) {
 	    minsetsub <- minsets[as.integer(comb[k, ]), ]
 	    ss1 = minsetsub[1, -ncol(minsets)]
 	    ss2 = minsetsub[2, -ncol(minsets)]
 	    
-	    tippoint.tmp = FindingTippingpoint_cpp(s1 = ss1,  s2 = ss2, 
-	                                           alpha = alpha, jj = J,
-	                                           tmax = FindingTip.itr)
-	
-	    colnames(tippoint.tmp) <- c(speciesName, "energy")
-	    
+	                                    
 	    ss <- data.frame(SS1=rownames(minsetsub)[1], SS1.energy=minsetsub[1,ncol(minsetsub)],
-	               SS2=rownames(minsetsub)[2], SS2.energy=minsetsub[2,ncol(minsetsub)])
-	    tp <- data.frame(TP=tpnodeID[k], tippoint.tmp)
-	    FindTip <- rbind(FindTip, cbind(ss, tp))
+	                     SS2=rownames(minsetsub)[2], SS2.energy=minsetsub[2,ncol(minsetsub)])
+	    FindTip[k, 1:4] <- ss
 	}
-	
 	## ||||||||||||||||||||||||||||||||||||| ##
 	## -- Summarize
 	tpState <- (FindTip[,-c(1:5)]);
@@ -101,7 +100,7 @@ ELAparallel <- function(alpha=alpha, J=jj,
                 thread=1){ 
     
     ## ||||||||||||||||||||||||||||||||||||| ##           	
-    #for.parallel(thread)            	
+    for.parallel(thread)            	
     start <- proc.time()[3]
 
 	speciesName <- rownames(J)
