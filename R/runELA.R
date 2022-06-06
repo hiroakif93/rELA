@@ -188,7 +188,8 @@ ELplunning <- function(elasummary, th=0.9){
 	## -- Make incidence matrix
 	
 	IM <- matrix(Inf, nrow=sum(stateInfo$state=='Stable state'), ncol=nrow(elaMat)+1,
-	             dimnames=list(stateInfo$stateID[which(stateInfo$state=='Stable state')]))
+	             dimnames=list(stateInfo$stateID[which(stateInfo$state=='Stable state')],
+	                           c('SSenergy', elaMat[,5])))
 	IM[,1] <- stateInfo$energy[which(stateInfo$state=='Stable state')]
 	for(i in 1:nrow(elaMat)){
 	    
