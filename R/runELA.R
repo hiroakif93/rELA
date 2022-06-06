@@ -266,7 +266,11 @@ ELplunning <- function(elasummary, th=0.9){
 	    
 	}
 	
-	return(list(matrix=elaMattmp, log=log[,c(1,ncol(log))]))
+	stateid <- unique(c(rownames(elaMattmp), colnames(elaMattmp)[-1]))
+	Pluned.stateInfo <- stateInfo[stateid, ]
+	
+	return(list(network=elaMattmp, stateInfo=Pluned.stateInfo,
+	            log=log[,c(1,ncol(log))]))
 	## ========================================== ##
     
     
