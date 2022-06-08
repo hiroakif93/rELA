@@ -100,7 +100,7 @@ ELAparallel <- function(alpha=alpha, J=jj,
                 thread=1){ 
     
     ## ||||||||||||||||||||||||||||||||||||| ##           	
-    for.parallel(thread)            	
+               	
     start <- proc.time()[3]
 
 	speciesName <- rownames(J)
@@ -108,8 +108,19 @@ ELAparallel <- function(alpha=alpha, J=jj,
 	## ||||||||||||||||||||||||||||||||||||| ##
 	## -- Stable state estimatin	
 	minsets = SSestimate(alpha, J, itr = SS.itr)
-	minsets = unique(round(minsets, digits = 8))
-	minsets <- minsets[order(minsets[, ncol(minsets)]), ]
+	uniqueSS <- data.frame(unique(minsets[,-ncol(sampleSS)]))
+	uniqueSS$energy <- NA
+	
+	for(i in 1:nrow(uniqueSS)){
+	    
+	    state <- uniqueSS[i,-ncol(uniqueSS)]
+	    detect <- apply(sampleSS[,-ncol(sampleSS)], 1, function(x){ all(x==state) })
+	    
+	    uniqueSS[i, ncol(uniqueSS)] <- mean(sampleSS[detect, ncol(sampleSS)])
+	}
+	sampleSS <- uniqueSS[order(uniqueSS$energy),]
+
+	minsets <- as.matrix(sampleSS[order(sampleSS[, ncol(sampleSS)]), ])
 	colnames(minsets) <- c(speciesName, "energy")
 	
 	ssid <- sprintf("SS_%s", formatC(1:nrow(minsets), width = nchar(ncol(minsets)), 
@@ -179,7 +190,7 @@ ELAparallel <- function(alpha=alpha, J=jj,
 #'@param elasummary : elasummary is a output of ELA function.
 #'@param th : th is a threshold which the range is 0 to 1.
 #'@export
-ELplunning <- function(elasummary, th=0.9){
+ELplunning <- function(elasummary, th=0.1){
     
 	stateInfo <- elasummary[[1]]
 	elaMat <- elasummary[[2]]
@@ -197,6 +208,7 @@ ELplunning <- function(elasummary, th=0.9){
 	    IM[ss, i+1] <- elaMat[i,ncol(elaMat)]
 	    
 	}
+	
 	## ========================================== ##
 	## -- Difference between stable state energy
 	sub <- IM[,-1]
@@ -314,22 +326,74 @@ SSentropy <- function(state, ss,
 #' @importFrom Rcpp sourceCpp
 #' @export
 calcStability <- function(data=NULL, alpha, J,
+						  plun=0,
 						  seitr=1000, convTime=10000){
 						  	
     start <- proc.time()[3]
-    ## ================================ ##
     sampleSS <- t(apply(data, 1, SteepestDescent_cpp, alpha=alpha, beta=J))
-    ssid <- apply(sampleSS[,-ncol(sampleSS)], 1, 
-                  function(x){ paste0(x, collapse='') })
+   	
+    ## ================================ ##
+	if(plun>0){
+		
+		## |||||||||||||||||||||||||||| ##
+		## plunned landscape
+	    elasummary <- ELAparallel(alpha=res[,1], J=res[,-1], thread=8)
+		redela <- ELplunning(elasummary, th=0.1)
+		
+		stateInfo <- elasummary[[1]]
+		ssInfo <- stateInfo[stateInfo$state=='Stable state',]
+		
+		## |||||||||||||||||||||||||||| ##
+		## -- Convert to deeper landscape
+		
+		sampleSSpluned <- as.matrix(sampleSS)
+		for(i in 1:nrow(ssInfo)){
+		    
+		    state <- ssInfo[i,-c(1, 2, ncol(ssInfo))]
+		    detect <- apply(sampleSS[,-ncol(sampleSS)], 1, function(x){ all(x==state) })
+		    
+		    if(sum(detect)>1){
+		        id <- ssInfo[i,1]
+		        
+		        if( !any(redela$log[,2]==id)){
+		            log <- redela$log
+		            change <- log[id,2]
+		            
+		            sampleSSpluned[detect,] <- matrix( unlist(ssInfo[change, -c(1,2)]), 
+		            								   ncol=ncol(sampleSStmp), nrow=sum(detect), 
+		            								   byrow=TRUE)
+		        }
+		        
+		    }
+		
+		}
+		sampleSS <- sampleSSpluned
+        ## |||||||||||||||||||||||||||| ##
+	}
+    
+    stablestate=t(apply(sampleSS, 1, 
+                    function(x){ 
+                        sep <- round(length(x)/20)
+                        line <- c()
+                        for(i in 1:sep){
+                            y <- x[-length(x)]
+                            bi <- na.omit(y[((1+20*(i-1)):(20*i))])
+                            line <- c(line, strtoi( paste0(bi, collapse=''), base=2))
+                            
+                        }
+                        
+                        ssid=paste(line, collapse='-')
+                        c(ssid, x[length(x)]) }))
+                  
     ssenergy <- sampleSS[, ncol(sampleSS)]
-    energy <- apply(ocdata, 1, cEnergy, alpha= alpha, beta=J)
+    energy <- apply(data, 1, cEnergy, alpha= alpha, beta=J)
     
     energy.gap <- energy-ssenergy
-    ssent <- SSentropy_cpp(uoc=ocdata, ss=unique(sampleSS[,-ncol(sampleSS)]),
+    ssent <- SSentropy_cpp(uoc=data, ss=unique(sampleSS[,-ncol(sampleSS)]),
           				alpha= alpha, beta=J, 
           				seitr=seitr, convTime=convTime)
           	  
-    return( data.frame(StableState.id=ssid, SSenergy=ssenergy,
+    return( data.frame(StableState.id=stablestate[,1], SSenergy=ssenergy,
                        energy.gap=energy.gap, SSentropy= ssent[,1]))
                        
     ## ================================ ##
