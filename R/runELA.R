@@ -19,8 +19,21 @@ ELA <- function(alpha=alpha, J=jj,
 	## ||||||||||||||||||||||||||||||||||||| ##
 	## -- Stable state estimatin	
 	minsets = SSestimate(alpha, J, itr = SS.itr)
-	minsets = unique(round(minsets, digits = 8))
-	minsets <- minsets[order(minsets[, ncol(minsets)]), ]
+	minsets = unique(minsets)
+	
+	uniqueSS <- data.frame(unique(minsets[,-ncol(minsets)]))
+	uniqueSS$energy <- NA
+	
+	for(i in 1:nrow(uniqueSS)){
+	    
+	    state <- uniqueSS[i,-ncol(uniqueSS)]
+	    detect <- apply(minsets[,-ncol(minsets)], 1, function(x){ all(x==state) })
+	    
+	    uniqueSS[i, ncol(uniqueSS)] <- mean(minsets[detect, ncol(minsets)])
+	}
+	sampleSS <- uniqueSS[order(uniqueSS$energy),]
+	
+	minsets <- as.matrix(sampleSS[order(sampleSS[, ncol(sampleSS)]), ])
 	colnames(minsets) <- c(speciesName, "energy")
 	
 	ssid <- sprintf("SS_%s", formatC(1:nrow(minsets), width = nchar(ncol(minsets)), 
@@ -38,7 +51,7 @@ ELA <- function(alpha=alpha, J=jj,
 	
 	
 	FindTipRes <- TPestimate(as.matrix(comb), minset = minsets[,-ncol(minsets)],
-                       alpha, beta, 100000)
+                       alpha, J, 100000)
 
 	FindTip <- data.frame(matrix(NA, ncol=4, nrow=nrow(FindTipRes)) ,TP=tpnodeID, FindTipRes)
 	colnames(FindTip) <- c('SS1', 'SS1.energy', 'SS2', 'SS2.energy','TP',speciesName, "energy")
@@ -108,18 +121,20 @@ ELAparallel <- function(alpha=alpha, J=jj,
 	## ||||||||||||||||||||||||||||||||||||| ##
 	## -- Stable state estimatin	
 	minsets = SSestimate(alpha, J, itr = SS.itr)
-	uniqueSS <- data.frame(unique(minsets[,-ncol(sampleSS)]))
+	minsets = unique(minsets)
+	
+	uniqueSS <- data.frame(unique(minsets[,-ncol(minsets)]))
 	uniqueSS$energy <- NA
 	
 	for(i in 1:nrow(uniqueSS)){
 	    
 	    state <- uniqueSS[i,-ncol(uniqueSS)]
-	    detect <- apply(sampleSS[,-ncol(sampleSS)], 1, function(x){ all(x==state) })
+	    detect <- apply(minsets[,-ncol(minsets)], 1, function(x){ all(x==state) })
 	    
-	    uniqueSS[i, ncol(uniqueSS)] <- mean(sampleSS[detect, ncol(sampleSS)])
+	    uniqueSS[i, ncol(uniqueSS)] <- mean(minsets[detect, ncol(minsets)])
 	}
 	sampleSS <- uniqueSS[order(uniqueSS$energy),]
-
+	
 	minsets <- as.matrix(sampleSS[order(sampleSS[, ncol(sampleSS)]), ])
 	colnames(minsets) <- c(speciesName, "energy")
 	
@@ -136,6 +151,7 @@ ELAparallel <- function(alpha=alpha, J=jj,
 	tpnodeID <- sprintf("TPnode_%s", formatC(1:nrow(comb), width = nchar(nrow(comb)), 
 	                             flag = "0"))
 	
+	for.parallel(thread)
 	FindTip <- foreach (k = 1:nrow(comb), .combine=rbind)%dopar%{
 	    
 	    minsetsub <- minsets[as.integer(comb[k, ]), ]
@@ -332,6 +348,18 @@ calcStability <- function(data=NULL, alpha, J,
     start <- proc.time()[3]
     sampleSS <- t(apply(data, 1, SteepestDescent_cpp, alpha=alpha, beta=J))
    	
+   	uniqueSS <- data.frame(unique(sampleSS[,-ncol(sampleSS)]))
+	uniqueSS$energy <- NA
+	
+	for(i in 1:nrow(uniqueSS)){
+	    
+	    state <- uniqueSS[i,-ncol(uniqueSS)]
+	    detect <- apply(sampleSS[,-ncol(sampleSS)], 1, function(x){ all(x==state) })
+	    
+	    uniqueSS[i, ncol(uniqueSS)] <- mean(sampleSS[detect, ncol(sampleSS)])
+	}
+	sampleSS <- uniqueSS[order(uniqueSS$energy),]
+	
     ## ================================ ##
 	if(plun>0){
 		
@@ -396,6 +424,89 @@ calcStability <- function(data=NULL, alpha, J,
     return( data.frame(StableState.id=stablestate[,1], SSenergy=ssenergy,
                        energy.gap=energy.gap, SSentropy= ssent[,1]))
                        
+    ## ================================ ##
+    end <- proc.time()[3]
+    cat(sprintf('Stability calculation done.\nElapsed time %.2f sec\n\n', end-start))                   
+}
+
+#'ELAall 
+#'@description Run all ELA pipeline
+#'@param data : data is a binary matrix.
+#'@param alpha : alpha is a vector which explicit/implicit preference. Use output of runSA function.
+#'@param J : J is a matrix which shows species preference. Use output of runSA function.
+#'@param 
+#'
+#' @useDynLib rELA, .registration=TRUE
+#' @importFrom Rcpp sourceCpp
+#' @export
+ELAall <- function( data=NULL, alpha, J,
+				    SS.itr=20000, FindingTip.itr=10000,
+					plun=0,
+					seitr=1000, convTime=10000,
+					thread=1){
+						  	
+    start <- proc.time()[3]
+    
+   	elasummary <- ELAparallel(alpha=res[,1], J=res[,-1], 
+   							  SS.itr= SS.itr, FindingTip.itr=10000, thread=thread)
+   	
+    ## ================================ ##    
+    sampleSS <- t(apply(data, 1, SteepestDescent_cpp, alpha=alpha, beta=J))
+   	
+	if(plun>0){
+		
+		## |||||||||||||||||||||||||||| ##
+		## plunned landscape
+	    
+		redela <- ELplunning(elasummary, th= plun)
+		
+		stateInfo <- elasummary[[1]]
+		ssInfo <- stateInfo[stateInfo$state=='Stable state',]
+		
+		## |||||||||||||||||||||||||||| ##
+		## -- Convert to deeper landscape
+		
+		sampleSSpluned <- as.matrix(sampleSS)
+		ssid <- rep(NA, nrow(sampleSS))
+		for(i in 1:nrow(ssInfo)){
+		    
+		    state <- ssInfo[i,-c(1, 2, ncol(ssInfo))]
+		    detect <- apply(sampleSS[,-ncol(sampleSS)], 1, function(x){ all(x==state) })
+		    ssid[detect] <- rownames(ssInfo)[i]
+        
+            if(sum(detect)>1){
+		        id <- ssInfo[i,1]
+		        
+		        if( !any(redela$log[,2]==id)){
+		            log <- redela$log
+		            change <- log[id,2]
+		            
+		            sampleSSpluned[detect,] <- matrix( unlist(ssInfo[change, -c(1,2)]), 
+		            								   ncol=ncol(sampleSSpluned), nrow=sum(detect), 
+		            								   byrow=TRUE)
+		        }
+		        
+		    }
+		
+		}
+		sampleSS <- sampleSSpluned
+        ## |||||||||||||||||||||||||||| ##
+	}
+                      
+    ssenergy <- sampleSS[, ncol(sampleSS)]
+    energy <- apply(data, 1, cEnergy, alpha= alpha, beta=J)
+    
+    energy.gap <- energy-ssenergy
+    ssent <- SSentropy_cpp(uoc=data, ss=unique(sampleSS[,-ncol(sampleSS)]),
+          				alpha= alpha, beta=J, 
+          				seitr=seitr, convTime=convTime)
+          	  
+    stability=data.frame(StableState.id=ssid, SSenergy=ssenergy,
+                     energy.gap=energy.gap, SSentropy= ssent[,1])
+
+
+	return( list(elaResult=elasummary, elaPlunning=redela, stability=stability ))
+                    
     ## ================================ ##
     end <- proc.time()[3]
     cat(sprintf('Stability calculation done.\nElapsed time %.2f sec\n\n', end-start))                   
