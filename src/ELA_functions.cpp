@@ -139,8 +139,8 @@ arma::mat SA_simple( const arma::mat& ocData, const double& maxInt=50000, const 
     
     // -- Preference for co-occurence of species i and j
     logmat=Logmodel_simple(ysim, alphas, beta);
-    OnestepHBSvoid(ysim, logmat);
-    
+    ysim=OnestepHBS(ysim, logmat);
+
     //mat ysimstats=trans(ysim) * ysim;
     ydif = ystats - (trans(ysim) * ysim);
     
@@ -222,8 +222,8 @@ arma::mat SA( const arma::mat& ocData, const arma::mat& envData, const double& m
     
     // -- 
     logmat=Logmodel(ysim, alpha, beta);
-    OnestepHBSvoid(ysim, logmat);
-    
+    ysim=OnestepHBS(ysim, logmat);
+
     ydif = ystats - (trans(ysim) * ysim);
     yenvdiff= yenvstats-(trans(envData) * ysim);
     
@@ -235,15 +235,17 @@ arma::mat SA( const arma::mat& ocData, const arma::mat& envData, const double& m
     alphasgrad = (ydif.diag().t() + Logprior(alphas, 2))/asconst;
     alphaegrad = (yenvdiff+Logprior(alphae,2))/aeconst;
 
-    // -- delta
+    // -- delta beta
     betagrad %= mat(nspecies, nspecies).fill((1-momtm)*learningrate);
     delbeta %= mat(nspecies, nspecies).fill(momtm);
     delbeta += betagrad;
     
+    // -- delta alphas
     alphasgrad %=mat(1, nspecies).fill((1-momtm)*learningrate) ;
     delalphas %=mat(1, nspecies).fill(momtm);
     delalphas+=alphasgrad ;   
     
+    // -- delta alphae
     alphaegrad %= mat(nenvironment, nspecies).fill((1-momtm)*learningrate);
     delalphae %= mat(nenvironment, nspecies).fill(momtm);
     delalphae += alphaegrad;
@@ -373,10 +375,12 @@ arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2,
   const int& SMcol=s1.n_elem;
   vec::fixed<2>c; 
   mat samplePath;
+  int r;
+  int column;
   
   mat samplePathtmp=zeros(SMrow, SMcol);
   samplePathtmp.row(0)=s1;
-  uvec v = linspace<uvec>(1,SMrow-1, SMrow-1);
+  const uvec& v = linspace<uvec>(1,SMrow-1, SMrow-1);
   vec CE=vec(SMrow);
   
   // ||||||||||||||||||||||||||||||||||| //
@@ -391,10 +395,10 @@ arma::rowvec FindingTippingpoint_cpp(arma::rowvec s1,arma:: rowvec s2,
     samplePath=samplePathtmp;
     
     // ||||||||||||||||||||||||||||||||||| //
-    int r=1;
+    r=1;
     
     for(int l=0; l<sn; ++l){
-      const int& column=seqnew(l);
+      column=seqnew(l);
       
       for(int i=r; i<SMrow; ++i){
   
