@@ -207,7 +207,7 @@ arma::mat SA( const arma::mat& ocData, const arma::mat& envData, const double& m
   
   const mat& betaconst=(nlocation * abs(eye(nspecies, nspecies)-1));
   const rowvec& asconst=(mat(1, nspecies).fill(nlocation));
-  const rowvec& aeconst=(mat(nenvironment, nspecies).fill(nlocation));
+  const mat& aeconst=(mat(nenvironment, nspecies).fill(nlocation));
   
   const double& learningrate0=0.1;
   // ========================================= //
