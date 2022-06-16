@@ -126,8 +126,8 @@ arma::mat SA_simple( const arma::mat& ocData, const double& maxInt=50000, const 
   mat logmat;  mat ydif ;
   const double& learningrate0=0.1;
   
-  const mat& betaconst=(nlocation * abs(eye(nspecies, nspecies)-1));
-  const rowvec& asconst=(mat(1, nspecies).fill(nlocation));
+  mat betaconst=(nlocation * abs(eye(nspecies, nspecies)-1));
+  rowvec asconst=(mat(1, nspecies).fill(nlocation));
   
   // ========================================= //
   // Main part
@@ -205,10 +205,10 @@ arma::mat SA( const arma::mat& ocData, const arma::mat& envData, const double& m
   mat alphaegrad = zeros(nspecies, nspecies);
   mat alpha; mat logmat; mat ydif; mat yenvdiff;
   
-  const mat& betaconst=(nlocation * abs(eye(nspecies, nspecies)-1));
-  const rowvec& asconst=(mat(1, nspecies).fill(nlocation));
-  const mat& aeconst=(mat(nenvironment, nspecies).fill(nlocation));
-  
+  mat betaconst=nlocation * abs(eye(nspecies, nspecies)-1);
+  rowvec asconst=mat(1, nspecies).fill(nlocation);
+  mat aeconst=mat(nenvironment, nspecies).fill(nlocation);
+
   const double& learningrate0=0.1;
   // ========================================= //
   // Main part
