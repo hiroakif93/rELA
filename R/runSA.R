@@ -61,8 +61,11 @@ runSA <- function(data=NULL, env=NULL,
 #' @importFrom foreach foreach
 #' @export
 runSAparallel <- function(data=NULL, env=NULL, 
-                   	  rep=16, max.itr=10000){
-
+                   	  rep=16, max.itr=10000, thread=1){
+	
+	require(doParallel)
+	for.parallel(thread)
+	
     if(is.null(env)){
     	
     	## ============================================== ##
