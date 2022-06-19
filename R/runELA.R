@@ -444,11 +444,10 @@ ELAall <- function( data=NULL, alpha, J,
 					plun=0,
 					seitr=1000, convTime=10000,
 					thread=1){
-						  	
-    start <- proc.time()[3]
+  start <- proc.time()[3]
     
-   	elasummary <- ELAparallel(alpha=res[,1], J=res[,-1], 
-   							  SS.itr= SS.itr, FindingTip.itr=10000, thread=thread)
+   elasummary <- ELAparallel(alpha=res[,1], J=res[,-1], 
+   			     SS.itr= SS.itr, FindingTip.itr=10000, thread=thread)
    	
     ## ================================ ##    
     sampleSS <- t(apply(data, 1, SteepestDescent_cpp, alpha=alpha, beta=J))
