@@ -5,7 +5,6 @@
 #include <Rcpp.h>
 
 using namespace Rcpp;
-using namespace arma;
 
 #ifdef RCPP_USE_GLOBAL_ROSTREAM
 Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
@@ -40,7 +39,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // cEnergy
-inline double cEnergy(const arma::rowvec& state, const arma::rowvec& alpha, const arma::mat& beta);
+double cEnergy(const arma::rowvec& state, const arma::rowvec& alpha, const arma::mat& beta);
 RcppExport SEXP _rELA_cEnergy(SEXP stateSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

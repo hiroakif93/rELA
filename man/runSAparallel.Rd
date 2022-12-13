@@ -4,7 +4,7 @@
 \alias{runSAparallel}
 \title{Parallel stochastic Approximation}
 \usage{
-runSAparallel(data = NULL, env = NULL, rep = 16, max.itr = 10000)
+runSAparallel(data = NULL, env = NULL, rep = 16, max.itr = 10000, thread = 1)
 }
 \description{
 Parallel stochastic Approximation

@@ -4,7 +4,7 @@
 \alias{ELplunning}
 \title{ELA Pluning}
 \usage{
-ELplunning(elasummary, th = 0.9)
+ELplunning(elasummary, th = 0.1)
 }
 \arguments{
 \item{elasummary}{: elasummary is a output of ELA function.}
