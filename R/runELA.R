@@ -50,7 +50,6 @@ ELA <- function(alpha=alpha, J=jj,
 	tpnodeID <- sprintf("TPnode_%s", formatC(1:nrow(comb), width = nchar(nrow(comb)), 
 						 flag = "0"))
 
-	for.parallel(8)
 	FindTip <- c()
 	for(k in 1:nrow(comb)){
 
