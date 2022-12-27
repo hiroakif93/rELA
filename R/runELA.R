@@ -15,6 +15,8 @@ ELA <- function(alpha=alpha, J=jj,
                 FindingTip.itr=10000){ 
     
 	start <- proc.time()[3]
+	speciesName <- rownames(J)
+	
 	## ||||||||||||||||||||||||||||||||||||| ##
 	## -- Stable state estimatin	
 	minsets = SSestimate(alpha, J, itr = SS.itr)
